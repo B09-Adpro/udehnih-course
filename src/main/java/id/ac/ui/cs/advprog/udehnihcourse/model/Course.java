@@ -6,6 +6,8 @@ import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+import lombok.Builder.Default;
 import java.time.LocalDateTime;
 import java.math.BigDecimal;
 import java.util.List;
@@ -34,10 +36,13 @@ public class Course {
     @Column(length = 1000)
     private String description;
 
+    @Column
+    private String category;
+
     @Column(name = "tutor_id", nullable = false)
     private String tutorId;
 
-    @Builder.Default
+    @Default
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal price = BigDecimal.ZERO;
 
@@ -45,11 +50,12 @@ public class Course {
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
+    @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @Builder.Default
+    @Default
     private List<Section> sections = new ArrayList<>();
 
     public void addSection(Section section) {
@@ -61,4 +67,8 @@ public class Course {
         sections.remove(section);
         section.setCourse(null);
     }
+
+    // TODO: implement logic-nya
+    @Transient
+    private int enrollmentCount = 0;
 }
