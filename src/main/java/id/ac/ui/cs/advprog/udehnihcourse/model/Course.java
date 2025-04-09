@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
-import lombok.Builder; // For Builder Pattern
+import lombok.Builder;
 import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 import java.math.BigDecimal;
@@ -37,6 +37,7 @@ public class Course {
     @Column(name = "tutor_id", nullable = false)
     private String tutorId;
 
+    @Builder.Default
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal price = BigDecimal.ZERO;
 
