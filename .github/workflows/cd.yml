@@ -44,4 +44,4 @@ jobs:
       - name: Delete old container
         run:  docker rm -f udehnih-course
       - name: Run docker container
-        run:  docker run -d -p 80:8080 --name udehnih-course mnr1332/adpro-aws-ec2:latest
+        run: docker run -d -p 80:8080 --name udehnih-course --restart unless-stopped mnr1332/adpro-aws-ec2:latest
