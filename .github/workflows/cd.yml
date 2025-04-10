@@ -40,8 +40,8 @@ jobs:
     runs-on: [udehnih-course-aws-ec2]
     steps:
       - name: Pull image from Dockerhub
-        run:  docker pull mnr1332/adpro-aws-ec2:latest
+        run:  sudo docker pull mnr1332/adpro-aws-ec2:latest
       - name: Delete old container
         run:  docker rm -f udehnih-course
       - name: Run docker container
-        run:  docker run -d -p 8080:8080 --name udehnih-course mnr1332/adpro-aws-ec2:latest
+        run:  docker run -d -p 80:8080 --name udehnih-course mnr1332/adpro-aws-ec2:latest
