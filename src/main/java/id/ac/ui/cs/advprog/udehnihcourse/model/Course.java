@@ -70,5 +70,6 @@ public class Course {
 
     // TODO: implement logic-nya
     @Transient
+    @Default
     private int enrollmentCount = 0;
 }
