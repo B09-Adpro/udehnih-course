@@ -14,6 +14,7 @@ public class CourseTest {
 
     @BeforeEach
     void setUp() {
+        LocalDateTime now = LocalDateTime.now();
         this.course = Course.builder()
                 .title("Advanced Programming Course")
                 .description("A deep dive into programming concepts.")
@@ -21,6 +22,9 @@ public class CourseTest {
                 .tutorId("tutor-123")
                 .price(new BigDecimal("150000.00"))
                 .build();
+
+        this.course.setCreatedAt(now);
+        this.course.setUpdatedAt(now);
 
         this.section = new Section();
         this.section.setId(1L);
@@ -34,8 +38,8 @@ public class CourseTest {
         assertEquals("A deep dive into programming concepts.", course.getDescription());
         assertEquals("Computer Science", course.getCategory());
         assertEquals("tutor-123", course.getTutorId());
-        assertEquals(0, new BigDecimal("150000.00").compareTo(course.getPrice())); // BigDecimal compare
-        assertNotNull(course.getSections()); // Default list initialized by @Builder.Default
+        assertEquals(0, new BigDecimal("150000.00").compareTo(course.getPrice()));
+        assertNotNull(course.getSections());
         assertTrue(course.getSections().isEmpty());
         assertNotNull(course.getCreatedAt());
         assertNotNull(course.getUpdatedAt());
