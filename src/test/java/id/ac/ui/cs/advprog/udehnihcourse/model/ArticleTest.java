@@ -63,4 +63,90 @@ public class ArticleTest {
         assertDoesNotThrow(() -> article.toString());
         assertFalse(article.toString().contains("Section{"));
     }
+
+    @Test
+    void testEquals_sameObject_shouldReturnTrue() {
+        assertEquals(article, article);
+    }
+
+    @Test
+    void testEquals_nullObject_shouldReturnFalse() {
+        assertNotEquals(null, article);
+    }
+
+    @Test
+    void testEquals_differentClass_shouldReturnFalse() {
+        assertNotEquals(article, new String("not an article"));
+    }
+
+    @Test
+    void testEquals_sameId_shouldReturnTrue() {
+        Article article1 = new Article();
+        article1.setId(100L);
+        article1.setTitle("Article Title");
+
+        Article article2 = new Article();
+        article2.setId(100L);
+        article2.setTitle("Another Title");
+
+        assertEquals(article1, article2);
+        assertEquals(article2, article1);
+    }
+
+    @Test
+    void testEquals_differentId_shouldReturnFalse() {
+        Article article1 = new Article();
+        article1.setId(100L);
+
+        Article article2 = new Article();
+        article2.setId(101L);
+
+        assertNotEquals(article1, article2);
+        assertNotEquals(article2, article1);
+    }
+
+    @Test
+    void testEquals_oneIdNull_shouldReturnFalse() {
+        Article article1 = new Article();
+        article1.setTitle("Transient Article");
+
+        Article article2 = new Article();
+        article2.setId(100L);
+
+        assertNotEquals(article1, article2);
+        assertNotEquals(article2, article1);
+    }
+
+    @Test
+    void testEquals_bothIdNull_shouldReturnFalseUnlessSameRef() {
+        Article article1 = new Article();
+        Article article2 = new Article();
+
+        assertNotEquals(article1, article2);
+        assertEquals(article1, article1);
+    }
+
+    @Test
+    void testHashCode_consistency() {
+        int initialHashCode = article.hashCode();
+        assertEquals(initialHashCode, article.hashCode());
+        assertEquals(initialHashCode, article.hashCode());
+    }
+
+    @Test
+    void testHashCode_basedOnClass() {
+        Article article1 = new Article();
+        article1.setId(1L);
+        Article article2 = new Article();
+        article2.setId(2L); // ID beda
+        Article article3 = new Article();
+
+        assertEquals(article1.hashCode(), article2.hashCode());
+        assertEquals(article1.hashCode(), article3.hashCode());
+
+        Article article4 = new Article();
+        article4.setId(1L);
+        assertEquals(article1, article4);
+        assertEquals(article1.hashCode(), article4.hashCode());
+    }
 }
