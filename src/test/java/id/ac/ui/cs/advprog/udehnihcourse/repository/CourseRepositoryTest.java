@@ -1,6 +1,8 @@
 package id.ac.ui.cs.advprog.udehnihcourse.repository;
 
+import id.ac.ui.cs.advprog.udehnihcourse.model.Article;
 import id.ac.ui.cs.advprog.udehnihcourse.model.Course;
+import id.ac.ui.cs.advprog.udehnihcourse.model.Section;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,6 +10,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -167,4 +170,51 @@ public class CourseRepositoryTest {
 
         assertTrue(nonExistentCourses.isEmpty());
     }
+
+    @Test
+    void whenFindByIdWithEntityGraph_thenFetchSectionsAndArticles() {
+        Article article1 = new Article();
+        article1.setTitle("Article 1");
+        article1.setContent("Content of Article 1");
+
+        Section section1 = new Section();
+        section1.setTitle("Section 1");
+        section1.setArticles(List.of(article1));
+
+        Course course = new Course();
+        course.setTitle("Java Programming");
+        course.setDescription("Learn Java from scratch");
+        course.setTutorId("tutor-1");
+        course.setPrice(new BigDecimal("100.00"));
+        course.setSections(List.of(section1));
+    
+        // Mengatur relasi dua arah
+        section1.setCourse(course);
+        article1.setSection(section1);
+    
+        // Persist Course
+        entityManager.persist(course);
+        entityManager.flush();
+    
+        // Fetch Course
+        Optional<Course> foundCourseOpt = courseRepository.findById(course.getId());
+    
+        assertTrue(foundCourseOpt.isPresent());
+        Course foundCourse = foundCourseOpt.get();
+    
+        assertEquals(course.getId(), foundCourse.getId());
+        assertEquals("Java Programming", foundCourse.getTitle());
+        assertEquals("Learn Java from scratch", foundCourse.getDescription());
+    
+        assertNotNull(foundCourse.getSections());
+        assertEquals(1, foundCourse.getSections().size());
+        assertEquals("Section 1", foundCourse.getSections().get(0).getTitle());
+    
+        List<Article> articles = foundCourse.getSections().get(0).getArticles();
+        assertNotNull(articles);
+        assertEquals(1, articles.size());
+        assertEquals("Article 1", articles.get(0).getTitle());
+        assertEquals("Content of Article 1", articles.get(0).getContent());
+    }
+
 }
