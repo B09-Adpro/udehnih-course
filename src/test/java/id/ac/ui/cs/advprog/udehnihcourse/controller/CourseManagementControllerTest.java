@@ -6,6 +6,7 @@ import id.ac.ui.cs.advprog.udehnihcourse.dto.course.CourseCreateRequest;
 import id.ac.ui.cs.advprog.udehnihcourse.dto.course.CourseResponse;
 import id.ac.ui.cs.advprog.udehnihcourse.dto.course.CourseUpdateRequest;
 import id.ac.ui.cs.advprog.udehnihcourse.dto.course.TutorCourseListItem;
+import id.ac.ui.cs.advprog.udehnihcourse.service.CourseBrowsingService;
 import id.ac.ui.cs.advprog.udehnihcourse.service.CourseManagementService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -41,6 +42,9 @@ public class CourseManagementControllerTest {
 
     @MockitoBean
     private CourseManagementService courseManagementService;
+
+    @MockitoBean
+    private CourseBrowsingService courseBrowsingService;
 
     @Autowired
     private ObjectMapper objectMapper;
