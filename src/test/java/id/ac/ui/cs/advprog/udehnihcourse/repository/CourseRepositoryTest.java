@@ -127,4 +127,44 @@ public class CourseRepositoryTest {
 
         assertTrue(nonExistentTutorCourses.isEmpty());
     }
+
+    @Test
+    void whenFindByTitleContainingIgnoreCase_withExistingData_thenReturnCorrectCourses() {
+        Course course3 = Course.builder()
+                .title("Advanced Java Programming")
+                .tutorId(tutor2Id)
+                .build();
+    
+        entityManager.persist(course1);
+        entityManager.persist(course2);
+        entityManager.persist(course3);
+        entityManager.flush();
+    
+        List<Course> javaCourses = courseRepository.findByTitleContainingIgnoreCase("java");
+        List<Course> programmingCourses = courseRepository.findByTitleContainingIgnoreCase("PROGRAMMING");
+    
+        assertEquals(1, javaCourses.size());
+        assertEquals("Advanced Java Programming", javaCourses.get(0).getTitle());
+    
+        assertEquals(1, programmingCourses.size());
+        assertEquals("Advanced Java Programming", programmingCourses.get(0).getTitle());
+    }
+
+    @Test
+    void whenFindByTitleContainingIgnoreCase_withNonExistentData_thenReturnEmptyList() {
+        Course course3 = Course.builder()
+                .title("Advanced Java Programming")
+                .tutorId(tutor2Id)
+                .build();
+
+        entityManager.persist(course1);
+        entityManager.persist(course2);
+        entityManager.persist(course3);
+        entityManager.flush();
+
+
+        List<Course> nonExistentCourses = courseRepository.findByTitleContainingIgnoreCase("nonexistent");
+
+        assertTrue(nonExistentCourses.isEmpty());
+    }
 }
