@@ -14,12 +14,17 @@ public class CourseTest {
 
     @BeforeEach
     void setUp() {
+        LocalDateTime now = LocalDateTime.now();
         this.course = Course.builder()
                 .title("Advanced Programming Course")
                 .description("A deep dive into programming concepts.")
+                .category("Computer Science")
                 .tutorId("tutor-123")
                 .price(new BigDecimal("150000.00"))
                 .build();
+
+        this.course.setCreatedAt(now);
+        this.course.setUpdatedAt(now);
 
         this.section = new Section();
         this.section.setId(1L);
@@ -31,10 +36,13 @@ public class CourseTest {
         assertNotNull(course);
         assertEquals("Advanced Programming Course", course.getTitle());
         assertEquals("A deep dive into programming concepts.", course.getDescription());
+        assertEquals("Computer Science", course.getCategory());
         assertEquals("tutor-123", course.getTutorId());
-        assertEquals(0, new BigDecimal("150000.00").compareTo(course.getPrice())); // BigDecimal compare
-        assertNotNull(course.getSections()); // Default list initialized by @Builder.Default
+        assertEquals(0, new BigDecimal("150000.00").compareTo(course.getPrice()));
+        assertNotNull(course.getSections());
         assertTrue(course.getSections().isEmpty());
+        assertNotNull(course.getCreatedAt());
+        assertNotNull(course.getUpdatedAt());
     }
 
     @Test
@@ -45,6 +53,7 @@ public class CourseTest {
         newCourse.setId(99L);
         newCourse.setTitle("New Title");
         newCourse.setDescription("New Desc");
+        newCourse.setCategory("Software Engineering");
         newCourse.setTutorId("tutor-456");
         newCourse.setPrice(BigDecimal.TEN);
         newCourse.setCreatedAt(now);
@@ -54,12 +63,15 @@ public class CourseTest {
         assertEquals(99L, newCourse.getId());
         assertEquals("New Title", newCourse.getTitle());
         assertEquals("New Desc", newCourse.getDescription());
+        assertEquals("Software Engineering", newCourse.getCategory());
         assertEquals("tutor-456", newCourse.getTutorId());
         assertEquals(0, BigDecimal.TEN.compareTo(newCourse.getPrice()));
         assertEquals(now, newCourse.getCreatedAt());
         assertEquals(now, newCourse.getUpdatedAt());
         assertNotNull(newCourse.getSections());
     }
+
+
 
     @Test
     void testAddSection() {
@@ -86,9 +98,18 @@ public class CourseTest {
     void testDefaultPriceIsZero() {
         Course freeCourse = Course.builder()
                 .title("Free Course")
+                .category("General")
                 .tutorId("tutor-789")
                 .build();
+
         assertEquals(0, BigDecimal.ZERO.compareTo(freeCourse.getPrice()));
+    }
+
+    @Test
+    void testDefaultEnrollmentCountIsZero() {
+        assertEquals(0, course.getEnrollmentCount());
+        course.setEnrollmentCount(10);
+        assertEquals(10, course.getEnrollmentCount());
     }
 
 }
