@@ -11,7 +11,9 @@ import id.ac.ui.cs.advprog.udehnihcourse.service.CourseBrowsingService;
 import lombok.RequiredArgsConstructor;
 
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/courses")
@@ -21,9 +23,13 @@ public class CourseManagementController {
     private final CourseBrowsingService courseBrowsingService;
     
     @GetMapping
-    public ResponseEntity<List<CourseListDTO>> getAllCourses() {
+    public ResponseEntity<Map<String, List<CourseListDTO>>> getAllCourses() {
         List<CourseListDTO> courses = courseBrowsingService.getAllCourses();
-        return ResponseEntity.ok(courses);
+
+        Map<String, List<CourseListDTO>> response = new HashMap<>();
+        response.put("courses", courses);
+
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/search")
