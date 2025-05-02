@@ -57,8 +57,9 @@ public class CourseBrowsingService {
         CourseListDTO dto = CourseListDTO.builder()
             .id(course.getId())
             .title(course.getTitle())
+            .category(course.getCategory())
+            .instructor(getTutorName(course.getTutorId()))
             .price(course.getPrice())
-            .tutorName(getTutorName(course.getTutorId()))
             .build();
         return dto; 
     }
