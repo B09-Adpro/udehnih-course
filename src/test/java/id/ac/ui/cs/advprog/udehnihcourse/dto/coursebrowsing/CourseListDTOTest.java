@@ -13,13 +13,15 @@ public class CourseListDTOTest {
                 .id(1L)
                 .title("Java Programming")
                 .price(new BigDecimal("100.00"))
-                .tutorName("John Doe")
+                .instructor("John Doe") // Updated field name
+                .category("Programming") // Added field
                 .build();
 
         assertEquals(1L, courseListDTO.getId());
         assertEquals("Java Programming", courseListDTO.getTitle());
         assertEquals(new BigDecimal("100.00"), courseListDTO.getPrice());
-        assertEquals("John Doe", courseListDTO.getTutorName());
+        assertEquals("John Doe", courseListDTO.getInstructor()); // Updated field name
+        assertEquals("Programming", courseListDTO.getCategory()); // Added field
     }
     
 }

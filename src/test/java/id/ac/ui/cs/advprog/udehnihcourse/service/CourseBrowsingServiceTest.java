@@ -38,14 +38,14 @@ public class CourseBrowsingServiceTest {
         MockitoAnnotations.openMocks(this);
 
         article = new Article();
-            article.setId(1L);
-            article.setTitle("Article 1");
-            article.setContent("Content of Article 1");
+        article.setId(1L);
+        article.setTitle("Article 1");
+        article.setContent("Content of Article 1");
 
         section = new Section();
-            section.setId(1L);
-            section.setTitle("Section 1");
-            section.setArticles(List.of(article));
+        section.setId(1L);
+        section.setTitle("Section 1");
+        section.setArticles(List.of(article));
 
         course = Course.builder()
                 .id(1L)
@@ -53,6 +53,8 @@ public class CourseBrowsingServiceTest {
                 .description("Learn Java from scratch")
                 .tutorId("tutor-1")
                 .price(new BigDecimal("100.00"))
+                .createdAt(java.time.LocalDateTime.of(2023, 1, 1, 10, 0))
+                .updatedAt(java.time.LocalDateTime.of(2023, 1, 1, 10, 0)) // Add updatedAt
                 .sections(List.of(section))
                 .build();
     }

@@ -25,17 +25,25 @@ public class CourseDetailDTOTest {
         CourseDetailDTO courseDetail = CourseDetailDTO.builder()
                 .id(1L)
                 .title("Java Programming")
-                .description("Learn Java from scratch")
-                .tutorName("John Doe")
+                .category("Programming")
+                .instructor("John Doe")
                 .price(new BigDecimal("100.00"))
+                .is_free(false)
+                .description("Learn Java from scratch")
+                .created_at("2023-01-01")
+                .updated_at("2023-01-10")
                 .sections(List.of(section1, section2))
                 .build();
 
         assertEquals(1L, courseDetail.getId());
         assertEquals("Java Programming", courseDetail.getTitle());
-        assertEquals("Learn Java from scratch", courseDetail.getDescription());
-        assertEquals("John Doe", courseDetail.getTutorName());
+        assertEquals("Programming", courseDetail.getCategory());
+        assertEquals("John Doe", courseDetail.getInstructor());
         assertEquals(new BigDecimal("100.00"), courseDetail.getPrice());
+        assertEquals(false, courseDetail.is_free());
+        assertEquals("Learn Java from scratch", courseDetail.getDescription());
+        assertEquals("2023-01-01", courseDetail.getCreated_at());
+        assertEquals("2023-01-10", courseDetail.getUpdated_at());
         assertEquals(2, courseDetail.getSections().size());
         assertEquals("Section 1", courseDetail.getSections().get(0).getTitle());
         assertEquals("Section 2", courseDetail.getSections().get(1).getTitle());
