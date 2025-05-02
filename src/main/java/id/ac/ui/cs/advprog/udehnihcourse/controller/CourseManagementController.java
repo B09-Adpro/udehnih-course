@@ -3,6 +3,7 @@ package id.ac.ui.cs.advprog.udehnihcourse.controller;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import id.ac.ui.cs.advprog.udehnihcourse.dto.coursebrowsing.CourseListDTO;
@@ -33,9 +34,13 @@ public class CourseManagementController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<List<CourseListDTO>> searchCourses(String keyword) {
+    public ResponseEntity<Map<String, List<CourseListDTO>>> searchCourses(@RequestParam String keyword) {
         List<CourseListDTO> courses = courseBrowsingService.searchCourses(keyword);
-        return ResponseEntity.ok(courses);
+
+        Map<String, List<CourseListDTO>> response = new HashMap<>();
+        response.put("courses", courses);
+
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{courseId}")
