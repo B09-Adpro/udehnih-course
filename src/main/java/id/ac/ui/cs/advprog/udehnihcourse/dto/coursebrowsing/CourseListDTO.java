@@ -16,6 +16,7 @@ import lombok.Data;
 public class CourseListDTO {
     private Long id;
     private String title;
+    private String category;
+    private String instructor;
     private BigDecimal price;
-    private String tutorName;
 }
