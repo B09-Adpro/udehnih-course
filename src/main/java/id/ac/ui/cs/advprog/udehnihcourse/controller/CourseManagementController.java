@@ -1,10 +1,7 @@
 package id.ac.ui.cs.advprog.udehnihcourse.controller;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import id.ac.ui.cs.advprog.udehnihcourse.dto.coursebrowsing.CourseListDTO;
 import id.ac.ui.cs.advprog.udehnihcourse.dto.coursebrowsing.CourseDetailDTO;
@@ -44,8 +41,8 @@ public class CourseManagementController {
     }
 
     @GetMapping("/{courseId}")
-    public ResponseEntity<CourseDetailDTO> getCourseById(Long id) {
-        CourseDetailDTO course = courseBrowsingService.getCourseById(id);
+    public ResponseEntity<CourseDetailDTO> getCourseById(@PathVariable Long courseId) {
+        CourseDetailDTO course = courseBrowsingService.getCourseById(courseId);
         return ResponseEntity.ok(course);
     }
 }

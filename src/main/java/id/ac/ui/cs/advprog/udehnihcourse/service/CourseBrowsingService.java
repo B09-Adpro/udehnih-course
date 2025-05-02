@@ -14,9 +14,11 @@ import id.ac.ui.cs.advprog.udehnihcourse.dto.coursebrowsing.CourseListDTO;
 import id.ac.ui.cs.advprog.udehnihcourse.dto.coursebrowsing.SectionDTO;
 import id.ac.ui.cs.advprog.udehnihcourse.dto.coursebrowsing.ArticleDTO;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.Collections;
+import java.util.concurrent.atomic.AtomicLong;
 
 @Service
 @RequiredArgsConstructor
@@ -46,9 +48,13 @@ public class CourseBrowsingService {
         return CourseDetailDTO.builder()
             .id(course.getId())
             .title(course.getTitle())
-            .description(course.getDescription())
-            .tutorName(getTutorName(course.getTutorId()))
+            .category(course.getCategory())
+            .instructor(getTutorName(course.getTutorId()))
             .price(course.getPrice())
+            .is_free(isFree(course))
+            .description(course.getDescription())
+            .created_at(course.getCreatedAt().toString())
+            .updated_at(course.getUpdatedAt().toString())
             .sections(mapToSectionDTOs(course.getSections()))
             .build();
     }
@@ -65,31 +71,40 @@ public class CourseBrowsingService {
     }
 
     private List<SectionDTO> mapToSectionDTOs(List<Section> sections) {
+        AtomicLong counter = new AtomicLong(1);
         return Optional.ofNullable(sections).orElse(Collections.emptyList()).stream()
-            .map(this::mapToSectionDTO)
-            .toList();
+                .map(section -> mapToSectionDTO(section, counter.getAndIncrement()))
+                .toList();
     }
 
-    private SectionDTO mapToSectionDTO(Section section) {
+    private SectionDTO mapToSectionDTO(Section section, Long order) {
         return SectionDTO.builder()
-            .id(section.getId())
-            .title(section.getTitle())
-            .articles(mapToArticleDTOs(section.getArticles()))
-            .build();
+                .id(section.getId())
+                .title(section.getTitle())
+                .order(order)
+                .articles(mapToArticleDTOs(section.getArticles()))
+                .build();
     }
 
     private List<ArticleDTO> mapToArticleDTOs(List<Article> articles) {
+        AtomicLong counter = new AtomicLong(1);
         return Optional.ofNullable(articles).orElse(Collections.emptyList()).stream()
-            .map(this::mapToArticleDTO)
+            .map(article -> mapToArticleDTO(article, counter.getAndIncrement()))
             .toList();
     }
 
-    private ArticleDTO mapToArticleDTO(Article article) {
+    private ArticleDTO mapToArticleDTO(Article article, Long order) {
         return ArticleDTO.builder()
             .id(article.getId())
             .title(article.getTitle())
+            .content_Type(article.getContentType())
             .content(article.getContent())
+            .order(order)
             .build();
+    }
+
+    private boolean isFree(Course course) {
+        return course.getPrice().compareTo(BigDecimal.ZERO) == 0;
     }
 
     // TODO : Implement this method to fetch the tutor name based on the tutorId

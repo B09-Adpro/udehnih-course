@@ -14,6 +14,7 @@ import lombok.Data;
 public class ArticleDTO {
     private Long id;
     private String title;
+    private String content_Type;
     private String content;
-    private String contentType;
+    private Long order;
 }

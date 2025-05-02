@@ -16,5 +16,6 @@ import lombok.Data;
 public class SectionDTO {
     private Long id;
     private String title;
+    private Long order;
     private List<ArticleDTO> articles;
 }
