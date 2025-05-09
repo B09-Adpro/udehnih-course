@@ -1,7 +1,9 @@
 package id.ac.ui.cs.advprog.udehnihcourse.controller;
 
+import id.ac.ui.cs.advprog.udehnihcourse.dto.coursebrowsing.ArticleDTO;
 import id.ac.ui.cs.advprog.udehnihcourse.dto.coursebrowsing.CourseDetailDTO;
 import id.ac.ui.cs.advprog.udehnihcourse.dto.coursebrowsing.CourseListDTO;
+import id.ac.ui.cs.advprog.udehnihcourse.dto.coursebrowsing.SectionDTO;
 import id.ac.ui.cs.advprog.udehnihcourse.service.CourseBrowsingService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,6 +17,7 @@ import java.util.Map;
 
 import static java.lang.System.out;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 public class CourseManagementControllerTest {
@@ -125,5 +128,49 @@ public class CourseManagementControllerTest {
         assertEquals(200, response.getStatusCode().value());
         assertEquals(courseDetail, response.getBody());
         verify(courseBrowsingService).getCourseById(1L, 12345L);
+    }
+
+    @Test
+    void testGetSectionContent() {
+        // Prepare mock data
+        SectionDTO sectionDTO = SectionDTO.builder()
+                .id(1L)
+                .title("Introduction to Java")
+                .order(1L)
+                .articles(List.of())
+                .build();
+
+        when(courseBrowsingService.getSectionById(1L, 2L, 12345L)).thenReturn(sectionDTO);
+
+        // Execute
+        ResponseEntity<SectionDTO> response = courseManagementController
+                .getSectionContent("Bearer dummy-token", 1L, 2L);
+
+        // Verify
+        assertEquals(200, response.getStatusCode().value());
+        assertEquals(sectionDTO, response.getBody());
+        verify(courseBrowsingService).getSectionById(1L, 2L, 12345L);
+    }
+
+    @Test
+    void testGetArticleContent() {
+        // Prepare mock data
+        ArticleDTO articleDTO = ArticleDTO.builder()
+                .id(3L)
+                .title("Java Variables")
+                .content("Java variables are containers for storing data values.")
+                .order(1L)
+                .build();
+
+        when(courseBrowsingService.getArticleById(1L, 3L, 12345L)).thenReturn(articleDTO);
+
+        // Execute
+        ResponseEntity<ArticleDTO> response = courseManagementController
+                .getArticleContent("Bearer dummy-token", 1L, 2L, 3L);
+
+        // Verify
+        assertEquals(200, response.getStatusCode().value());
+        assertEquals(articleDTO, response.getBody());
+        verify(courseBrowsingService).getArticleById(1L, 3L, 12345L);
     }
 }
