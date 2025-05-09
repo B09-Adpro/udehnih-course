@@ -1,5 +1,6 @@
 package id.ac.ui.cs.advprog.udehnihcourse.service;
 
+import id.ac.ui.cs.advprog.udehnihcourse.repository.EnrollmentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -27,6 +28,7 @@ public class CourseBrowsingService {
     
     @Autowired
     private CourseRepository courseRepository;
+    private EnrollmentRepository enrollmentRepository;
     
     public List<CourseListDTO> getAllCourses() {
         List<Course> courses = courseRepository.findAll();
@@ -42,9 +44,11 @@ public class CourseBrowsingService {
             .toList();
     }
 
-    public CourseDetailDTO getCourseById(Long id) {
-        Course course = courseRepository.findById(id).orElseThrow(() -> new RuntimeException("Course not found"));   
-    
+    public CourseDetailDTO getCourseById(Long id, Long studentId) {
+        Course course = courseRepository.findById(id).orElseThrow(() -> new RuntimeException("Course not found"));
+
+        boolean isEnrolled = isEnrolled(studentId, id);
+
         return CourseDetailDTO.builder()
             .id(course.getId())
             .title(course.getTitle())
@@ -55,7 +59,7 @@ public class CourseBrowsingService {
             .description(course.getDescription())
             .created_at(course.getCreatedAt().toString())
             .updated_at(course.getUpdatedAt().toString())
-            .sections(mapToSectionDTOs(course.getSections()))
+            .sections(isEnrolled ? mapToSectionDTOs(course.getSections()) : Collections.emptyList())
             .build();
     }
 
@@ -105,6 +109,10 @@ public class CourseBrowsingService {
 
     private boolean isFree(Course course) {
         return course.getPrice().compareTo(BigDecimal.ZERO) == 0;
+    }
+
+    private boolean isEnrolled(Long studentId, Long courseId) {
+        return enrollmentRepository.existsByStudentIdAndCourseId(studentId, courseId);
     }
 
     // TODO : Implement this method to fetch the tutor name based on the tutorId
