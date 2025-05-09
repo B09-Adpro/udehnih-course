@@ -3,6 +3,8 @@ package id.ac.ui.cs.advprog.udehnihcourse.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
+import id.ac.ui.cs.advprog.udehnihcourse.dto.coursebrowsing.ArticleDTO;
+import id.ac.ui.cs.advprog.udehnihcourse.dto.coursebrowsing.SectionDTO;
 import id.ac.ui.cs.advprog.udehnihcourse.model.Enrollment;
 import id.ac.ui.cs.advprog.udehnihcourse.repository.EnrollmentRepository;
 import id.ac.ui.cs.advprog.udehnihcourse.repository.SectionRepository;
@@ -103,5 +105,139 @@ public class CourseBrowsingServiceTest {
         assertEquals(new BigDecimal("100.00"), courseDetail.getPrice());
         assertEquals(1, courseDetail.getSections().size());
         assertEquals("Section 1", courseDetail.getSections().get(0).getTitle());
+    }
+
+    @Test
+    void testGetSectionById_whenStudentIsEnrolled_returnsSectionDTO() {
+        // Setup
+        when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
+        when(enrollmentRepository.existsByStudentIdAndCourseId(101L, 1L)).thenReturn(true);
+
+        // Execute
+        SectionDTO sectionDTO = courseBrowsingService.getSectionById(1L, 1L, 101L);
+
+        // Verify
+        assertEquals(1L, sectionDTO.getId());
+        assertEquals("Section 1", sectionDTO.getTitle());
+        assertEquals(1L, sectionDTO.getOrder());
+        assertEquals(1, sectionDTO.getArticles().size());
+        assertEquals("Article 1", sectionDTO.getArticles().get(0).getTitle());
+    }
+
+    @Test
+    void testGetSectionById_whenStudentIsNotEnrolled_throwsException() {
+        // Setup
+        when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
+        when(enrollmentRepository.existsByStudentIdAndCourseId(101L, 1L)).thenReturn(false);
+
+        // Execute and verify
+        RuntimeException exception = org.junit.jupiter.api.Assertions.assertThrows(
+                RuntimeException.class,
+                () -> courseBrowsingService.getSectionById(1L, 1L, 101L)
+        );
+
+        assertEquals("Student is not enrolled in this course", exception.getMessage());
+    }
+
+    @Test
+    void testGetSectionById_whenSectionNotFound_throwsException() {
+        // Setup
+        when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
+        when(enrollmentRepository.existsByStudentIdAndCourseId(101L, 1L)).thenReturn(true);
+
+        // Execute and verify
+        RuntimeException exception = org.junit.jupiter.api.Assertions.assertThrows(
+                RuntimeException.class,
+                () -> courseBrowsingService.getSectionById(1L, 999L, 101L)
+        );
+
+        assertEquals("Section not found in this course", exception.getMessage());
+    }
+
+    @Test
+    void testGetArticleById_whenStudentIsEnrolled_returnsArticleDTO() {
+        // Setup
+        when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
+        when(enrollmentRepository.existsByStudentIdAndCourseId(101L, 1L)).thenReturn(true);
+
+        // Execute
+        ArticleDTO articleDTO = courseBrowsingService.getArticleById(1L, 1L, 101L);
+
+        // Verify
+        assertEquals(1L, articleDTO.getId());
+        assertEquals("Article 1", articleDTO.getTitle());
+        assertEquals("Content of Article 1", articleDTO.getContent());
+        assertEquals(1L, articleDTO.getOrder());
+    }
+
+    @Test
+    void testGetArticleById_whenStudentIsNotEnrolled_throwsException() {
+        // Setup
+        when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
+        when(enrollmentRepository.existsByStudentIdAndCourseId(101L, 1L)).thenReturn(false);
+
+        // Execute and verify
+        RuntimeException exception = org.junit.jupiter.api.Assertions.assertThrows(
+                RuntimeException.class,
+                () -> courseBrowsingService.getArticleById(1L, 1L, 101L)
+        );
+
+        assertEquals("Student is not enrolled in this course", exception.getMessage());
+    }
+
+    @Test
+    void testGetArticleById_whenArticleNotFound_throwsException() {
+        // Setup
+        when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
+        when(enrollmentRepository.existsByStudentIdAndCourseId(101L, 1L)).thenReturn(true);
+
+        // Execute and verify
+        RuntimeException exception = org.junit.jupiter.api.Assertions.assertThrows(
+                RuntimeException.class,
+                () -> courseBrowsingService.getArticleById(1L, 999L, 101L)
+        );
+
+        assertEquals("Article not found in this course", exception.getMessage());
+    }
+
+    @Test
+    void testGetArticleById_multipleArticles_returnsCorrectOrder() {
+        // Setup
+        Article article1 = new Article();
+        article1.setId(1L);
+        article1.setTitle("Article 1");
+        article1.setContent("Content of Article 1");
+
+        Article article2 = new Article();
+        article2.setId(2L);
+        article2.setTitle("Article 2");
+        article2.setContent("Content of Article 2");
+
+        Section sectionWithMultipleArticles = new Section();
+        sectionWithMultipleArticles.setId(1L);
+        sectionWithMultipleArticles.setTitle("Section 1");
+        sectionWithMultipleArticles.setArticles(List.of(article1, article2));
+
+        Course courseWithMultipleArticles = Course.builder()
+                .id(1L)
+                .title("Java Programming")
+                .description("Learn Java from scratch")
+                .tutorId("tutor-1")
+                .price(new BigDecimal("100.00"))
+                .createdAt(java.time.LocalDateTime.of(2023, 1, 1, 10, 0))
+                .updatedAt(java.time.LocalDateTime.of(2023, 1, 1, 10, 0))
+                .sections(List.of(sectionWithMultipleArticles))
+                .build();
+
+        when(courseRepository.findById(1L)).thenReturn(Optional.of(courseWithMultipleArticles));
+        when(enrollmentRepository.existsByStudentIdAndCourseId(101L, 1L)).thenReturn(true);
+
+        // Execute
+        ArticleDTO article1DTO = courseBrowsingService.getArticleById(1L, 1L, 101L);
+        ArticleDTO article2DTO = courseBrowsingService.getArticleById(1L, 2L, 101L);
+
+        // Verify
+        assertEquals(1L, article1DTO.getOrder());
+        assertEquals(2L, article2DTO.getOrder());
     }
 }

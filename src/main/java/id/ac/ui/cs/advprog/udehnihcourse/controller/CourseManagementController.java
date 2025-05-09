@@ -1,5 +1,7 @@
 package id.ac.ui.cs.advprog.udehnihcourse.controller;
 
+import id.ac.ui.cs.advprog.udehnihcourse.dto.coursebrowsing.ArticleDTO;
+import id.ac.ui.cs.advprog.udehnihcourse.dto.coursebrowsing.SectionDTO;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -56,6 +58,37 @@ public class CourseManagementController {
         }
         CourseDetailDTO course = courseBrowsingService.getCourseById(courseId, studentId);
         return ResponseEntity.ok(course);
+    }
+
+    @GetMapping("/{courseId}/sections/{sectionId}")
+    public ResponseEntity<SectionDTO> getSectionContent(
+            @RequestHeader("Authorization") String token,
+            @PathVariable Long courseId,
+            @PathVariable Long sectionId) {
+
+        Long studentId = extractStudentIdFromToken(token);
+        if (studentId == null) {
+            throw new RuntimeException("Invalid authentication token");
+        }
+
+        SectionDTO section = courseBrowsingService.getSectionById(courseId, sectionId, studentId);
+        return ResponseEntity.ok(section);
+    }
+
+    @GetMapping("/{courseId}/sections/{sectionId}/articles/{articleId}")
+    public ResponseEntity<ArticleDTO> getArticleContent(
+            @RequestHeader("Authorization") String token,
+            @PathVariable Long courseId,
+            @PathVariable Long sectionId,
+            @PathVariable Long articleId) {
+
+        Long studentId = extractStudentIdFromToken(token);
+        if (studentId == null) {
+            throw new RuntimeException("Invalid authentication token");
+        }
+
+        ArticleDTO article = courseBrowsingService.getArticleById(courseId, articleId, studentId);
+        return ResponseEntity.ok(article);
     }
 
     // TODO : Implement JWT Token Auth
