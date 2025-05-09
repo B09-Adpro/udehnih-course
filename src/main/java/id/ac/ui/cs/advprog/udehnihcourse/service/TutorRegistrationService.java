@@ -26,6 +26,7 @@ import java.util.Optional;
 public class TutorRegistrationService {
 
     private final TutorRegistrationRepository tutorRegistrationRepository;
+
     public TutorApplicationResponse applyAsTutor(TutorApplicationRequest request, String studentId) {
         // TODO: Integrate with Spring Security for studentId.
 
