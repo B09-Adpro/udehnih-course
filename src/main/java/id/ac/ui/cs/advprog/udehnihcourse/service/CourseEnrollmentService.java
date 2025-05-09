@@ -21,7 +21,7 @@ public class CourseEnrollmentService {
     @Autowired
     private final EnrollmentRepository enrollmentRepository;
 
-    public EnrollmentDTO enrollStudentInCourse(String studentId, Long courseId) {
+    public EnrollmentDTO enrollStudentInCourse(Long studentId, Long courseId) {
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new RuntimeException("Course not found"));
 
@@ -46,7 +46,7 @@ public class CourseEnrollmentService {
                 .build();
     }
 
-    public  List<EnrolledCourseDTO> getStudentEnrollments(String studentId) {
+    public  List<EnrolledCourseDTO> getStudentEnrollments(Long studentId) {
         List<EnrolledCourseDTO> enrolledCourses = enrollmentRepository.findByStudentId(studentId)
                 .stream()
                 .map(enrollment -> EnrolledCourseDTO.builder()

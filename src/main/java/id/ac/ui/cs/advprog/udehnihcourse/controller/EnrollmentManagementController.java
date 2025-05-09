@@ -22,7 +22,7 @@ public class EnrollmentManagementController {
     public ResponseEntity<EnrollmentDTO> enrollInCourse(
             @RequestHeader("Authorization") String token,
             @RequestParam Long courseId) {
-        String studentId = extractStudentIdFromToken(token);
+        Long studentId = extractStudentIdFromToken(token);
         EnrollmentDTO enrollmentDTO = enrollmentService.enrollStudentInCourse(studentId, courseId);
         return ResponseEntity.ok(enrollmentDTO);
     }
@@ -31,7 +31,7 @@ public class EnrollmentManagementController {
     @GetMapping
     public ResponseEntity<Map<String,  List<EnrolledCourseDTO>>> getEnrolledCourses(
             @RequestHeader("Authorization") String token) {
-        String studentId = extractStudentIdFromToken(token);
+        Long studentId = extractStudentIdFromToken(token);
         List<EnrolledCourseDTO> enrolledCourse = enrollmentService.getStudentEnrollments(studentId);
 
         Map<String,  List<EnrolledCourseDTO>> response = new HashMap<>();
@@ -41,10 +41,11 @@ public class EnrollmentManagementController {
     }
 
     // TODO : Implement JWT Token Auth
-    private String extractStudentIdFromToken(String token) {
+    private Long extractStudentIdFromToken(String token) {
         if (token != null && token.startsWith("Bearer ")) {
             token = token.substring(7);
         }
-        return "dummy-student-id";
+        // Placeholder: returning a dummy Long ID instead of String
+        return 12345L;
     }
 }

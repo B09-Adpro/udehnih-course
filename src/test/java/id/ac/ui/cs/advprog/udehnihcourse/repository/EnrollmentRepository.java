@@ -3,7 +3,6 @@ package id.ac.ui.cs.advprog.udehnihcourse.repository;
 import id.ac.ui.cs.advprog.udehnihcourse.model.Course;
 import id.ac.ui.cs.advprog.udehnihcourse.model.Enrollment;
 import id.ac.ui.cs.advprog.udehnihcourse.model.EnrollmentStatus;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -35,7 +34,7 @@ class EnrollmentRepositoryTest {
                 .build();
     }
 
-    private Enrollment createEnrollment(String studentId, Course course) {
+    private Enrollment createEnrollment(Long studentId, Course course) {
         return Enrollment.builder()
                 .studentId(studentId)
                 .course(course)
@@ -52,14 +51,14 @@ class EnrollmentRepositoryTest {
         entityManager.persist(course1);
         entityManager.persist(course2);
 
-        Enrollment enrollment1 = createEnrollment("student1", course1);
-        Enrollment enrollment2 = createEnrollment("student1", course2);
+        Enrollment enrollment1 = createEnrollment(1L, course1);
+        Enrollment enrollment2 = createEnrollment(1L, course2);
         entityManager.persist(enrollment1);
         entityManager.persist(enrollment2);
         entityManager.flush();
 
         // Act
-        List<Enrollment> found = enrollmentRepository.findByStudentId("student1");
+        List<Enrollment> found = enrollmentRepository.findByStudentId(1L);
 
         // Assert
         assertEquals(2, found.size());
@@ -73,17 +72,17 @@ class EnrollmentRepositoryTest {
         Course course = createCourse("Java Programming");
         entityManager.persist(course);
 
-        Enrollment enrollment = createEnrollment("student1", course);
+        Enrollment enrollment = createEnrollment(1L, course);
         entityManager.persist(enrollment);
         entityManager.flush();
 
         // Act
-        Optional<Enrollment> found = enrollmentRepository.findByStudentIdAndCourseId("student1", course.getId());
+        Optional<Enrollment> found = enrollmentRepository.findByStudentIdAndCourseId(1L, course.getId());
 
         // Assert
         assertTrue(found.isPresent());
         assertEquals("Java Programming", found.get().getCourse().getTitle());
-        assertEquals("student1", found.get().getStudentId());
+        assertEquals(1L, found.get().getStudentId());
         assertEquals(EnrollmentStatus.ENROLLED, found.get().getStatus());
     }
 
@@ -93,13 +92,13 @@ class EnrollmentRepositoryTest {
         Course course = createCourse("Java Programming");
         entityManager.persist(course);
 
-        Enrollment enrollment = createEnrollment("student1", course);
+        Enrollment enrollment = createEnrollment(1L, course);
         entityManager.persist(enrollment);
         entityManager.flush();
 
         // Act
-        boolean exists = enrollmentRepository.existsByStudentIdAndCourseId("student1", course.getId());
-        boolean nonExists = enrollmentRepository.existsByStudentIdAndCourseId("student2", course.getId());
+        boolean exists = enrollmentRepository.existsByStudentIdAndCourseId(1L, course.getId());
+        boolean nonExists = enrollmentRepository.existsByStudentIdAndCourseId(2L, course.getId());
 
         // Assert
         assertTrue(exists);
@@ -114,7 +113,7 @@ class EnrollmentRepositoryTest {
         entityManager.flush();
 
         // Act
-        List<Enrollment> found = enrollmentRepository.findByStudentId("nonexistent");
+        List<Enrollment> found = enrollmentRepository.findByStudentId(999L);
 
         // Assert
         assertTrue(found.isEmpty());
@@ -128,7 +127,7 @@ class EnrollmentRepositoryTest {
         entityManager.flush();
 
         // Act
-        Optional<Enrollment> found = enrollmentRepository.findByStudentIdAndCourseId("nonexistent", course.getId());
+        Optional<Enrollment> found = enrollmentRepository.findByStudentIdAndCourseId(999L, course.getId());
 
         // Assert
         assertTrue(found.isEmpty());

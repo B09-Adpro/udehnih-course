@@ -45,4 +45,25 @@ public class CourseManagementController {
         CourseDetailDTO course = courseBrowsingService.getCourseById(courseId);
         return ResponseEntity.ok(course);
     }
+
+    @GetMapping("/{courseId}/content")
+    public ResponseEntity<CourseDetailDTO> getCourseContent(
+            @RequestHeader("Authorization") String token,
+            @PathVariable Long courseId) {
+        Long studentId = extractStudentIdFromToken(token);
+        if (studentId == null) {
+            throw new RuntimeException("Invalid authentication token");
+        }
+        CourseDetailDTO course = courseBrowsingService.getCourseById(courseId);
+        return ResponseEntity.ok(course);
+    }
+
+    // TODO : Implement JWT Token Auth
+    private Long extractStudentIdFromToken(String token) {
+        if (token != null && token.startsWith("Bearer ")) {
+            token = token.substring(7);
+        }
+        // Placeholder: returning a dummy Long ID instead of String
+        return 12345L;
+    }
 }

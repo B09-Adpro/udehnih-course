@@ -31,6 +31,7 @@ class EnrollmentManagementControllerTest {
     private EnrollmentDTO enrollmentDTO;
     private List<EnrolledCourseDTO> enrolledCourses;
     private String authToken;
+    private final Long DUMMY_STUDENT_ID = 12345L;
 
     @BeforeEach
     void setUp() {
@@ -61,7 +62,7 @@ class EnrollmentManagementControllerTest {
     @Test
     void whenEnrollInCourse_thenSuccess() {
         // Arrange
-        when(enrollmentService.enrollStudentInCourse("dummy-student-id", 1L))
+        when(enrollmentService.enrollStudentInCourse(DUMMY_STUDENT_ID, 1L))
                 .thenReturn(enrollmentDTO);
 
         // Act
@@ -71,13 +72,13 @@ class EnrollmentManagementControllerTest {
         assertNotNull(response);
         assertEquals(200, response.getStatusCode().value());
         assertEquals(enrollmentDTO, response.getBody());
-        verify(enrollmentService).enrollStudentInCourse("dummy-student-id", 1L);
+        verify(enrollmentService).enrollStudentInCourse(DUMMY_STUDENT_ID, 1L);
     }
 
     @Test
     void whenGetEnrolledCourses_thenReturnList() {
         // Arrange
-        when(enrollmentService.getStudentEnrollments("dummy-student-id"))
+        when(enrollmentService.getStudentEnrollments(DUMMY_STUDENT_ID))
                 .thenReturn(enrolledCourses);
 
         // Act
@@ -89,13 +90,13 @@ class EnrollmentManagementControllerTest {
         assertNotNull(response.getBody());
         assertEquals(enrolledCourses, response.getBody().get("courses"));
         assertEquals(2, response.getBody().get("courses").size());
-        verify(enrollmentService).getStudentEnrollments("dummy-student-id");
+        verify(enrollmentService).getStudentEnrollments(DUMMY_STUDENT_ID);
     }
 
     @Test
     void whenGetEnrolledCoursesWithEmptyList_thenReturnEmptyResponse() {
         // Arrange
-        when(enrollmentService.getStudentEnrollments("dummy-student-id"))
+        when(enrollmentService.getStudentEnrollments(DUMMY_STUDENT_ID))
                 .thenReturn(List.of());
 
         // Act
@@ -106,14 +107,14 @@ class EnrollmentManagementControllerTest {
         assertEquals(200, response.getStatusCode().value());
         assertNotNull(response.getBody());
         assertTrue(response.getBody().get("courses").isEmpty());
-        verify(enrollmentService).getStudentEnrollments("dummy-student-id");
+        verify(enrollmentService).getStudentEnrollments(DUMMY_STUDENT_ID);
     }
 
     @Test
     void whenTokenWithoutBearer_thenStillProcess() {
         // Arrange
         String tokenWithoutBearer = "dummy-token";
-        when(enrollmentService.getStudentEnrollments("dummy-student-id"))
+        when(enrollmentService.getStudentEnrollments(DUMMY_STUDENT_ID))
                 .thenReturn(enrolledCourses);
 
         // Act
@@ -123,6 +124,6 @@ class EnrollmentManagementControllerTest {
         // Assert
         assertNotNull(response);
         assertEquals(200, response.getStatusCode().value());
-        verify(enrollmentService).getStudentEnrollments("dummy-student-id");
+        verify(enrollmentService).getStudentEnrollments(DUMMY_STUDENT_ID);
     }
 }

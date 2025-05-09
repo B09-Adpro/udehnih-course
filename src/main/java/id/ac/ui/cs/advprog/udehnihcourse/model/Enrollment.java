@@ -27,7 +27,7 @@ public class Enrollment {
     private Long id;
 
     @Column(name = "student_id", nullable = false)
-    private String studentId;
+    private Long studentId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "course_id", nullable = false)

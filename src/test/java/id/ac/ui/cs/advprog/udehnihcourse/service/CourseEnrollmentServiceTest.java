@@ -52,7 +52,7 @@ class CourseEnrollmentServiceTest {
 
         enrollment = Enrollment.builder()
                 .id(1L)
-                .studentId("student1")
+                .studentId(101L)
                 .course(course)
                 .status(EnrollmentStatus.ENROLLED)
                 .enrolledAt(LocalDateTime.now())
@@ -63,11 +63,11 @@ class CourseEnrollmentServiceTest {
     void whenEnrollStudentInCourse_thenSuccess() {
         // Arrange
         when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
-        when(enrollmentRepository.existsByStudentIdAndCourseId("student1", 1L)).thenReturn(false);
+        when(enrollmentRepository.existsByStudentIdAndCourseId(101L, 1L)).thenReturn(false);
         when(enrollmentRepository.save(any(Enrollment.class))).thenReturn(enrollment);
 
         // Act
-        EnrollmentDTO result = courseEnrollmentService.enrollStudentInCourse("student1", 1L);
+        EnrollmentDTO result = courseEnrollmentService.enrollStudentInCourse(101L, 1L);
 
         // Assert
         assertNotNull(result);
@@ -84,7 +84,7 @@ class CourseEnrollmentServiceTest {
 
         // Act & Assert
         assertThrows(RuntimeException.class, () ->
-                courseEnrollmentService.enrollStudentInCourse("student1", 1L)
+                courseEnrollmentService.enrollStudentInCourse(101L, 1L)
         );
         verify(enrollmentRepository, never()).save(any());
     }
@@ -93,11 +93,11 @@ class CourseEnrollmentServiceTest {
     void whenEnrollAlreadyEnrolledStudent_thenThrowException() {
         // Arrange
         when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
-        when(enrollmentRepository.existsByStudentIdAndCourseId("student1", 1L)).thenReturn(true);
+        when(enrollmentRepository.existsByStudentIdAndCourseId(101L, 1L)).thenReturn(true);
 
         // Act & Assert
         assertThrows(RuntimeException.class, () ->
-                courseEnrollmentService.enrollStudentInCourse("student1", 1L)
+                courseEnrollmentService.enrollStudentInCourse(101L, 1L)
         );
         verify(enrollmentRepository, never()).save(any());
     }
@@ -112,35 +112,35 @@ class CourseEnrollmentServiceTest {
                 .build();
 
         Enrollment enrollment2 = Enrollment.builder()
-                .studentId("student1")
+                .studentId(101L)
                 .course(course2)
                 .status(EnrollmentStatus.ENROLLED)
                 .build();
 
-        when(enrollmentRepository.findByStudentId("student1"))
+        when(enrollmentRepository.findByStudentId(101L))
                 .thenReturn(Arrays.asList(enrollment, enrollment2));
 
         // Act
-        List<EnrolledCourseDTO> results = courseEnrollmentService.getStudentEnrollments("student1");
+        List<EnrolledCourseDTO> results = courseEnrollmentService.getStudentEnrollments(101L);
 
         // Assert
         assertEquals(2, results.size());
         assertEquals("Java Programming", results.get(0).getTitle());
         assertEquals("Python Programming", results.get(1).getTitle());
         assertEquals("Tutor Name", results.get(0).getInstructor());
-        verify(enrollmentRepository).findByStudentId("student1");
+        verify(enrollmentRepository).findByStudentId(101L);
     }
 
     @Test
     void whenGetStudentEnrollmentsWithNoEnrollments_thenReturnEmptyList() {
         // Arrange
-        when(enrollmentRepository.findByStudentId("student1")).thenReturn(List.of());
+        when(enrollmentRepository.findByStudentId(101L)).thenReturn(List.of());
 
         // Act
-        List<EnrolledCourseDTO> results = courseEnrollmentService.getStudentEnrollments("student1");
+        List<EnrolledCourseDTO> results = courseEnrollmentService.getStudentEnrollments(101L);
 
         // Assert
         assertTrue(results.isEmpty());
-        verify(enrollmentRepository).findByStudentId("student1");
+        verify(enrollmentRepository).findByStudentId(101L);
     }
 }
