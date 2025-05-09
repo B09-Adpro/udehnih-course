@@ -12,6 +12,8 @@ import org.springframework.http.ResponseEntity;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
+
+import static java.lang.System.out;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
@@ -87,15 +89,41 @@ public class CourseManagementControllerTest {
                 .updated_at("2023-01-01T10:00:00")
                 .build();
 
-        when(courseBrowsingService.getCourseById(1L)).thenReturn(courseDetail);
+        when(courseBrowsingService.getCourseById(1L, null)).thenReturn(courseDetail);
 
         // Execute
         ResponseEntity<CourseDetailDTO> response = courseManagementController.getCourseById(1L);
 
         // Verify
         assertEquals(200, response.getStatusCode().value());
-        assertEquals(1L, response.getBody().getId());
-        assertEquals("Java Course", response.getBody().getTitle());
-        assertEquals("Learn Java Programming", response.getBody().getDescription());
+        assertEquals(courseDetail, response.getBody());
+    }
+
+    @Test
+    void testGetCourseContent() {
+        // Prepare mock data
+        CourseDetailDTO courseDetail = CourseDetailDTO.builder()
+                .id(1L)
+                .title("Java Course")
+                .instructor("John Doe")
+                .price(new BigDecimal("100.00"))
+                .description("Learn Java Programming")
+                .category("Programming")
+                .is_free(false)
+                .created_at("2023-01-01T10:00:00")
+                .updated_at("2023-01-01T10:00:00")
+                .sections(List.of())
+                .build();
+
+        when(courseBrowsingService.getCourseById(1L, 12345L)).thenReturn(courseDetail);
+
+        // Execute
+        ResponseEntity<CourseDetailDTO> response = courseManagementController
+                .getCourseContent("Bearer dummy-token", 1L);
+
+        // Verify
+        assertEquals(200, response.getStatusCode().value());
+        assertEquals(courseDetail, response.getBody());
+        verify(courseBrowsingService).getCourseById(1L, 12345L);
     }
 }
