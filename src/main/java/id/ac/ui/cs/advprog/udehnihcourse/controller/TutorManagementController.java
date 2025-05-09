@@ -7,6 +7,7 @@ import id.ac.ui.cs.advprog.udehnihcourse.dto.tutor.TutorApplicationStatusRespons
 import id.ac.ui.cs.advprog.udehnihcourse.dto.GenericResponse;
 import id.ac.ui.cs.advprog.udehnihcourse.service.CourseManagementService;
 import id.ac.ui.cs.advprog.udehnihcourse.service.TutorRegistrationService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -32,7 +33,7 @@ public class TutorManagementController {
     private final CourseManagementService courseManagementService;
 
     @PostMapping("/apply")
-    public ResponseEntity<TutorApplicationResponse> applyAsTutor(@RequestBody TutorApplicationRequest request) {
+    public ResponseEntity<TutorApplicationResponse> applyAsTutor(@Valid @RequestBody TutorApplicationRequest request) {
         // TODO: Get studentId from Security Context
         String studentId = "student-test";
 
@@ -40,8 +41,8 @@ public class TutorManagementController {
 
         URI location = ServletUriComponentsBuilder
                 .fromCurrentRequest()
-                .path("/{id}")
-                .buildAndExpand(response.getApplicationId())
+                .path("/status")
+                .build()
                 .toUri();
 
         return ResponseEntity.created(location).body(response);
