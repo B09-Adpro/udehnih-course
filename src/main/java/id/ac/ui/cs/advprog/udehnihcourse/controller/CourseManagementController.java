@@ -42,7 +42,7 @@ public class CourseManagementController {
 
     @GetMapping("/{courseId}")
     public ResponseEntity<CourseDetailDTO> getCourseById(@PathVariable Long courseId) {
-        CourseDetailDTO course = courseBrowsingService.getCourseById(courseId);
+        CourseDetailDTO course = courseBrowsingService.getCourseById(courseId, null);
         return ResponseEntity.ok(course);
     }
 
@@ -54,7 +54,7 @@ public class CourseManagementController {
         if (studentId == null) {
             throw new RuntimeException("Invalid authentication token");
         }
-        CourseDetailDTO course = courseBrowsingService.getCourseById(courseId);
+        CourseDetailDTO course = courseBrowsingService.getCourseById(courseId, studentId);
         return ResponseEntity.ok(course);
     }
 
