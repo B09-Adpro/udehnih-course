@@ -63,6 +63,66 @@ public class CourseBrowsingService {
             .build();
     }
 
+    public SectionDTO getSectionById(Long courseId, Long sectionId, Long studentId) {
+        // Verify course exists
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new RuntimeException("Course not found"));
+
+        // Check enrollment
+        if (!isEnrolled(studentId, courseId)) {
+            throw new RuntimeException("Student is not enrolled in this course");
+        }
+
+        // Find the section in the course
+        Section section = course.getSections().stream()
+                .filter(s -> s.getId().equals(sectionId))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Section not found in this course"));
+
+        // Calculate section order within course
+        AtomicLong sectionOrder = new AtomicLong(1);
+        for (Section s : course.getSections()) {
+            if (s.getId().equals(sectionId)) {
+                break;
+            }
+            sectionOrder.incrementAndGet();
+        }
+
+        return mapToSectionDTO(section, sectionOrder.get());
+    }
+
+    public ArticleDTO getArticleById(Long courseId, Long articleId, Long studentId) {
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new RuntimeException("Course not found"));
+
+        if (!isEnrolled(studentId, courseId)) {
+            throw new RuntimeException("Student is not enrolled in this course");
+        }
+
+        for (Section section : course.getSections()) {
+            Optional<Article> articleOpt = section.getArticles().stream()
+                    .filter(a -> a.getId().equals(articleId))
+                    .findFirst();
+
+            if (articleOpt.isPresent()) {
+                Article article = articleOpt.get();
+
+                // Calculate article order within section
+                AtomicLong counter = new AtomicLong(1);
+                for (Article a : section.getArticles()) {
+                    if (a.getId().equals(articleId)) {
+                        break;
+                    }
+                    counter.incrementAndGet();
+                }
+
+                return mapToArticleDTO(article, counter.get());
+            }
+        }
+
+        throw new RuntimeException("Article not found in this course");
+    }
+
     private CourseListDTO convertToDto(Course course) {
         CourseListDTO dto = CourseListDTO.builder()
             .id(course.getId())
