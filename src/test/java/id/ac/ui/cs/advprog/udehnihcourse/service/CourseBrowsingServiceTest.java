@@ -3,6 +3,9 @@ package id.ac.ui.cs.advprog.udehnihcourse.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
+import id.ac.ui.cs.advprog.udehnihcourse.model.Enrollment;
+import id.ac.ui.cs.advprog.udehnihcourse.repository.EnrollmentRepository;
+import id.ac.ui.cs.advprog.udehnihcourse.repository.SectionRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -22,9 +25,12 @@ import java.util.Optional;
 
 
 public class CourseBrowsingServiceTest {
-    
+
     @Mock
     private CourseRepository courseRepository;
+
+    @Mock
+    private EnrollmentRepository enrollmentRepository;
 
     @InjectMocks
     private CourseBrowsingService courseBrowsingService;
@@ -83,10 +89,14 @@ public class CourseBrowsingServiceTest {
 
     @Test
     void testGetCourseById() {
+        // Setup
         when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
+        when(enrollmentRepository.existsByStudentIdAndCourseId(101L, 1L)).thenReturn(true);
 
-        CourseDetailDTO courseDetail = courseBrowsingService.getCourseById(1L);
+        // Execute
+        CourseDetailDTO courseDetail = courseBrowsingService.getCourseById(1L, 101L);
 
+        // Verify
         assertEquals(1L, courseDetail.getId());
         assertEquals("Java Programming", courseDetail.getTitle());
         assertEquals("Learn Java from scratch", courseDetail.getDescription());
