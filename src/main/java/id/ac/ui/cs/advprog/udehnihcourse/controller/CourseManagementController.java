@@ -13,7 +13,11 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.security.access.AccessDeniedException;
+import id.ac.ui.cs.advprog.udehnihcourse.dto.course.CourseEnrollmentStudentDTO;
+import jakarta.validation.Valid;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.net.URI;
 import java.util.List;
 
 /**
@@ -28,12 +32,18 @@ public class CourseManagementController {
     private final CourseManagementService courseManagementService;
 
     @PostMapping
-    public ResponseEntity<CourseResponse> createCourse(@RequestBody CourseCreateRequest createRequest) {
+    public ResponseEntity<CourseResponse> createCourse(@Valid @RequestBody CourseCreateRequest createRequest) {
         // TODO: Get authenticated Tutor ID from Security Context
         String tutorId = "tutor-test";
 
         CourseResponse response = courseManagementService.createCourse(createRequest, tutorId);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(response.getCourseId())
+                .toUri();
+        return ResponseEntity.created(location).body(response);
     }
 
 //    @GetMapping("/tutor/courses")
@@ -46,7 +56,7 @@ public class CourseManagementController {
 //    }
 
     @PutMapping("/{courseId}")
-    public ResponseEntity<CourseResponse> updateCourse(@PathVariable Long courseId, @RequestBody CourseUpdateRequest updateRequest) {
+    public ResponseEntity<CourseResponse> updateCourse(@PathVariable Long courseId, @Valid @RequestBody CourseUpdateRequest updateRequest) {
         // TODO: Get authenticated Tutor ID from Security Context
         String tutorId = "tutor-test";
 
@@ -61,6 +71,16 @@ public class CourseManagementController {
 
         courseManagementService.deleteCourse(courseId, tutorId);
         return ResponseEntity.ok(new GenericResponse("Course deleted successfully"));
+    }
+
+    @GetMapping("/{courseId}/enrollments")
+    public ResponseEntity<List<CourseEnrollmentStudentDTO>> getEnrolledStudents(
+            @PathVariable Long courseId) {
+        // TODO: Get authenticated Tutor ID from Security Context
+        String tutorId = "tutor-test";
+
+        List<CourseEnrollmentStudentDTO> students = courseManagementService.getEnrolledStudentsForCourse(courseId, tutorId);
+        return ResponseEntity.ok(students);
     }
 
 }
