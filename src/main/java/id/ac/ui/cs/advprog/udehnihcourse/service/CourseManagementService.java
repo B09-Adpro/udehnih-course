@@ -1,5 +1,6 @@
 package id.ac.ui.cs.advprog.udehnihcourse.service;
 
+import id.ac.ui.cs.advprog.udehnihcourse.dto.course.CourseEnrollmentStudentDTO;
 import id.ac.ui.cs.advprog.udehnihcourse.dto.course.CourseCreateRequest;
 import id.ac.ui.cs.advprog.udehnihcourse.dto.course.CourseResponse;
 import id.ac.ui.cs.advprog.udehnihcourse.dto.course.CourseUpdateRequest;
@@ -62,25 +63,6 @@ public class CourseManagementService {
                 .build();
     }
 
-    @Transactional(readOnly = true)
-    public List<TutorCourseListItem> getCoursesByTutor(String tutorId) {
-        verifyUserIsAcceptedTutor(tutorId);
-
-        List<Course> courses = courseRepository.findByTutorId(tutorId);
-        return courses.stream()
-                .map(course -> TutorCourseListItem.builder()
-                        .id(course.getId())
-                        .title(course.getTitle())
-                        .category(course.getCategory())
-                        .price(course.getPrice())
-                        // TODO: perlu enrollment count sungguhan dari Enrollment service
-                        .enrollmentCount(0)
-                        .createdAt(course.getCreatedAt())
-                        .build())
-                .collect(Collectors.toList());
-    }
-
-
     public CourseResponse updateCourse(Long courseId, CourseUpdateRequest request, String tutorId) {
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Course not found with ID: " + courseId));
@@ -116,5 +98,53 @@ public class CourseManagementService {
         }
 
         courseRepository.delete(course);
+    }
+
+    @Transactional(readOnly = true)
+    public List<TutorCourseListItem> getCoursesByTutor(String tutorId) {
+        verifyUserIsAcceptedTutor(tutorId);
+
+        List<Course> courses = courseRepository.findByTutorId(tutorId);
+        return courses.stream()
+                .map(course -> {
+                    // TODO: Implementasi logic untuk mendapatkan enrollmentCount yang sebenarnya.
+                    int placeholderEnrollmentCount = course.getEnrollmentCount();
+
+                    return TutorCourseListItem.builder()
+                            .id(course.getId())
+                            .title(course.getTitle())
+                            .category(course.getCategory())
+                            .price(course.getPrice())
+                            .enrollmentCount(placeholderEnrollmentCount)
+                            .createdAt(course.getCreatedAt())
+                            .build();
+                })
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<CourseEnrollmentStudentDTO> getEnrolledStudentsForCourse(Long courseId, String tutorId) {
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found with ID: " + courseId));
+        verifyCourseOwnership(course, tutorId);
+
+        // TODO: Implementasi logic untuk mengambil data student yang terdaftar.
+        List<CourseEnrollmentStudentDTO> enrolledStudents = new java.util.ArrayList<>();
+
+        if (enrolledStudents.isEmpty()) {
+            System.out.println("DEBUG: No enrolled students (dummy) for course " + courseId);
+        }
+
+        return enrolledStudents;
+    }
+
+    public void verifyCourseOwnership(Course course, String tutorId) {
+        // TODO: Ambil tutorId dari Security Context jika tutorId parameter null/tidak dipakai
+        if (course == null) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,"Course object is null in ownership check.");
+        }
+        if (!course.getTutorId().equals(tutorId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Tutor " + tutorId + " is not authorized for this course.");
+        }
     }
 }
