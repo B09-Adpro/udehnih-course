@@ -5,12 +5,14 @@ import id.ac.ui.cs.advprog.udehnihcourse.dto.tutor.TutorApplicationRequest;
 import id.ac.ui.cs.advprog.udehnihcourse.dto.tutor.TutorApplicationResponse;
 import id.ac.ui.cs.advprog.udehnihcourse.dto.tutor.TutorApplicationStatusResponse;
 import id.ac.ui.cs.advprog.udehnihcourse.dto.GenericResponse;
+import id.ac.ui.cs.advprog.udehnihcourse.security.AppUserDetails;
 import id.ac.ui.cs.advprog.udehnihcourse.service.CourseManagementService;
 import id.ac.ui.cs.advprog.udehnihcourse.service.TutorRegistrationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import java.net.URI;
@@ -33,9 +35,12 @@ public class TutorManagementController {
     private final CourseManagementService courseManagementService;
 
     @PostMapping("/apply")
-    public ResponseEntity<TutorApplicationResponse> applyAsTutor(@Valid @RequestBody TutorApplicationRequest request) {
-        // TODO: Get studentId from Security Context
-        String studentId = "student-test";
+    public ResponseEntity<TutorApplicationResponse> applyAsTutor(
+            @Valid @RequestBody TutorApplicationRequest request,
+            @AuthenticationPrincipal AppUserDetails studentDetails
+    ) {
+
+        String studentId = String.valueOf(studentDetails.getId());
 
         TutorApplicationResponse response = tutorRegistrationService.applyAsTutor(request, studentId);
 
@@ -49,27 +54,33 @@ public class TutorManagementController {
     }
 
     @GetMapping("/status")
-    public ResponseEntity<TutorApplicationStatusResponse> checkApplicationStatus() {
-        // TODO: Get studentId from Security Context
-        String studentId = "student-test";
+    public ResponseEntity<TutorApplicationStatusResponse> checkApplicationStatus(
+            @AuthenticationPrincipal AppUserDetails studentDetails
+    ) {
+
+        String studentId = String.valueOf(studentDetails.getId());
 
         TutorApplicationStatusResponse response = tutorRegistrationService.checkApplicationStatus(studentId);
         return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/apply")
-    public ResponseEntity<GenericResponse> cancelTutorApplication() {
-        // TODO: Get studentId from Security Context
-        String studentId = "student-test";
+    public ResponseEntity<GenericResponse> cancelTutorApplication(
+            @AuthenticationPrincipal AppUserDetails studentDetails
+    ) {
+
+        String studentId = String.valueOf(studentDetails.getId());
 
         tutorRegistrationService.cancelTutorApplication(studentId);
         return ResponseEntity.ok(new GenericResponse("Tutor application canceled successfully"));
     }
 
     @GetMapping("/courses")
-    public ResponseEntity<Map<String, Object>> getMyCourses() {
-        // TODO: Get authenticated Tutor ID from Security Context
-        String tutorId = "tutor-test";
+    public ResponseEntity<Map<String, Object>> getMyCourses(
+            @AuthenticationPrincipal AppUserDetails tutorDetails
+    ) {
+
+        String tutorId = String.valueOf(tutorDetails.getId());
 
         List<TutorCourseListItem> courses = courseManagementService.getCoursesByTutor(tutorId);
 
