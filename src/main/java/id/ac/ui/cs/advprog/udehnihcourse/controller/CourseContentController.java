@@ -4,11 +4,13 @@ import id.ac.ui.cs.advprog.udehnihcourse.dto.article.ArticleRequest;
 import id.ac.ui.cs.advprog.udehnihcourse.dto.article.ArticleResponse;
 import id.ac.ui.cs.advprog.udehnihcourse.dto.section.SectionRequest;
 import id.ac.ui.cs.advprog.udehnihcourse.dto.section.SectionResponse;
+import id.ac.ui.cs.advprog.udehnihcourse.security.AppUserDetails;
 import id.ac.ui.cs.advprog.udehnihcourse.service.CourseContentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.security.access.AccessDeniedException;
@@ -29,9 +31,11 @@ public class CourseContentController {
     @PostMapping("/courses/{courseId}/sections")
     public ResponseEntity<SectionResponse> addSection(
             @PathVariable Long courseId,
-            @Valid @RequestBody SectionRequest sectionRequest) {
-        // TODO: Get authenticated Tutor ID from Security Context
-        String tutorId = "tutor-content-placeholder";
+            @Valid @RequestBody SectionRequest sectionRequest,
+            @AuthenticationPrincipal AppUserDetails tutorDetails
+            ) {
+
+        String tutorId = String.valueOf(tutorDetails.getId());
 
         try {
             SectionResponse createdSection = courseContentService.addSectionToCourse(courseId, sectionRequest, tutorId);
@@ -51,9 +55,10 @@ public class CourseContentController {
     public ResponseEntity<SectionResponse> updateSection(
             @PathVariable Long courseId,
             @PathVariable Long sectionId,
-            @Valid @RequestBody SectionRequest sectionRequest) {
-        // TODO: Get authenticated Tutor ID
-        String tutorId = "tutor-content-placeholder";
+            @Valid @RequestBody SectionRequest sectionRequest,
+            @AuthenticationPrincipal AppUserDetails tutorDetails
+    ) {
+        String tutorId = String.valueOf(tutorDetails.getId());
 
         try {
             SectionResponse updatedSection = courseContentService.updateSection(courseId, sectionId, sectionRequest, tutorId);
@@ -66,9 +71,11 @@ public class CourseContentController {
     @DeleteMapping("/courses/{courseId}/sections/{sectionId}")
     public ResponseEntity<Void> deleteSection(
             @PathVariable Long courseId,
-            @PathVariable Long sectionId) {
-        // TODO: Get authenticated Tutor ID
-        String tutorId = "tutor-content-placeholder";
+            @PathVariable Long sectionId,
+            @AuthenticationPrincipal AppUserDetails tutorDetails
+    ) {
+
+        String tutorId = String.valueOf(tutorDetails.getId());
 
         try {
             courseContentService.deleteSection(courseId, sectionId, tutorId);
@@ -78,12 +85,14 @@ public class CourseContentController {
         }
     }
 
-    @PostMapping("/sections/{sectionId}/articles")
+    @PostMapping("/courses/{courseId}/sections/{sectionId}/articles")
     public ResponseEntity<ArticleResponse> addArticle(
             @PathVariable Long sectionId,
-            @Valid @RequestBody ArticleRequest articleRequest) {
-        // TODO: Get authenticated Tutor ID
-        String tutorId = "tutor-content-placeholder";
+            @Valid @RequestBody ArticleRequest articleRequest,
+            @AuthenticationPrincipal AppUserDetails tutorDetails
+    ) {
+
+        String tutorId = String.valueOf(tutorDetails.getId());
 
         try {
             ArticleResponse createdArticle = courseContentService.addArticleToSection(sectionId, articleRequest, tutorId);
@@ -93,20 +102,22 @@ public class CourseContentController {
         }
     }
 
-    @GetMapping("/sections/{sectionId}/articles")
+    @GetMapping("/courses/{courseId}/sections/{sectionId}/articles")
     public ResponseEntity<List<ArticleResponse>> getArticles(@PathVariable Long sectionId) {
         List<ArticleResponse> articles = courseContentService.getArticlesBySection(sectionId);
         return ResponseEntity.ok(articles);
     }
 
 
-    @PutMapping("/sections/{sectionId}/articles/{articleId}")
+    @PutMapping("/courses/{courseId}/sections/{sectionId}/articles/{articleId}")
     public ResponseEntity<ArticleResponse> updateArticle(
             @PathVariable Long sectionId,
             @PathVariable Long articleId,
-            @Valid @RequestBody ArticleRequest articleRequest) {
-        // TODO: Get authenticated Tutor ID
-        String tutorId = "tutor-content-placeholder";
+            @Valid @RequestBody ArticleRequest articleRequest,
+            @AuthenticationPrincipal AppUserDetails tutorDetails
+    ) {
+
+        String tutorId = String.valueOf(tutorDetails.getId());
 
         try {
             ArticleResponse updatedArticle = courseContentService.updateArticle(sectionId, articleId, articleRequest, tutorId);
@@ -116,12 +127,14 @@ public class CourseContentController {
         }
     }
 
-    @DeleteMapping("/sections/{sectionId}/articles/{articleId}")
+    @DeleteMapping("/courses/{courseId}/sections/{sectionId}/articles/{articleId}")
     public ResponseEntity<Void> deleteArticle(
             @PathVariable Long sectionId,
-            @PathVariable Long articleId) {
-        // TODO: Get authenticated Tutor ID
-        String tutorId = "tutor-content-placeholder";
+            @PathVariable Long articleId,
+            @AuthenticationPrincipal AppUserDetails tutorDetails
+    ) {
+
+        String tutorId = String.valueOf(tutorDetails.getId());
 
         try {
             courseContentService.deleteArticle(sectionId, articleId, tutorId);
