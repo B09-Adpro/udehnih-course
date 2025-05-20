@@ -34,7 +34,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorizeRequests ->
                         authorizeRequests
                                  .requestMatchers(HttpMethod.POST,
-                                         "/api/tutors/apply")// Hanya Student yang bisa apply
+                                         "/api/tutors/apply")
                                 .access(allOf(
                                         hasRole("STUDENT"),
                                         not(hasRole("TUTOR"))
@@ -42,18 +42,18 @@ public class SecurityConfig {
 
                                 .requestMatchers(HttpMethod.GET,
                                         "/api/tutors/status")
-                                .hasAnyRole("STUDENT", "TUTOR") // Student dan Tutor yang bisa cek status dia diterima atau ngga
+                                .hasAnyRole("STUDENT", "TUTOR")
 
                                 .requestMatchers(HttpMethod.DELETE,
                                         "/api/tutors/apply")
                                 .access(allOf(
                                         hasRole("STUDENT"),
                                         not(hasRole("TUTOR"))
-                                )) // Hanya Student yang bisa menggagalkan applicancenya sendiri
+                                ))
 
                                 .requestMatchers(HttpMethod.GET,
                                         "/api/tutors/courses")
-                                .hasRole("TUTOR") // Hanya Tutor yang bisa cek courses-nya sendiri
+                                .hasRole("TUTOR")
 
                                 .requestMatchers(HttpMethod.GET,
                                         "/api/courses")
@@ -71,11 +71,42 @@ public class SecurityConfig {
                                         "/api/courses/{courseId}/enrollments")
                                 .hasRole("TUTOR")
 
+                                .requestMatchers(HttpMethod.POST,
+                                        "api/courses/{courseId}/sections")
+                                .hasRole("TUTOR")
+
+                                .requestMatchers(HttpMethod.GET,
+                                        "api/courses/{courseId}/sections")
+                                .hasRole("TUTOR")
+
+                                .requestMatchers(HttpMethod.PUT,
+                                        "api/courses/{courseId}/sections/{sectionId}")
+                                .hasRole("TUTOR")
+
+                                .requestMatchers(HttpMethod.DELETE,
+                                        "api/courses/{courseId}/sections/{sectionId}")
+                                .hasRole("TUTOR")
+
+                                .requestMatchers(HttpMethod.POST,
+                                        "api/courses/{courseId}/sections/{sectionId}/articles")
+                                .hasRole("TUTOR")
+
+                                .requestMatchers(HttpMethod.GET,
+                                        "api/courses/{courseId}/sections/{sectionId}/articles")
+                                .hasRole("TUTOR")
+
+                                .requestMatchers(HttpMethod.PUT,
+                                        "api/courses/{courseId}/sections/{sectionId}/articles/{articlesId}")
+                                .hasRole("TUTOR")
+
+                                .requestMatchers(HttpMethod.DELETE,
+                                        "api/courses/{courseId}/sections/{sectionId}/articles/{articleId}")
+                                .hasRole("TUTOR")
+
+
                                 .anyRequest().authenticated()
                 );
-//                .authorizeHttpRequests(authorizeRequests ->
-//                                authorizeRequests.anyRequest().permitAll()
-//                );
+
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
