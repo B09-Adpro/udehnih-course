@@ -23,9 +23,10 @@ import java.security.Key;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
-@Slf4j
 @Component
+@Slf4j
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
@@ -35,6 +36,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
+
+        log.info("JwtAuthenticationFilter: doFilterInternal called for URI: {}", request.getRequestURI());
+        log.info("Authorization Header: {}", request.getHeader("Authorization"));
 
         try {
             String jwt = parseJwt(request);
@@ -46,11 +50,26 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 String email = claims.get("email", String.class);
 
+                log.info("JWT Claims for user {}: {}", email, claims.toString());
+
+                List<String> rolesFromClaim = claims.get("authorities", List.class);
+
                 List<SimpleGrantedAuthority> authorities = Collections.singletonList(
                         new SimpleGrantedAuthority("ROLE_STUDENT")
                 );
 
-                StudentDetails studentDetails = new StudentDetails(
+                log.info("Extracted authorities for user {}: {}", email, authorities);
+
+                if (rolesFromClaim != null) {
+                    authorities = rolesFromClaim.stream()
+                            .map(SimpleGrantedAuthority::new)
+                            .collect(Collectors.toList());
+                    log.debug("User {} has authorities from token: {}", email, authorities);
+                } else {
+                    log.warn("No 'authorities' claim found in JWT for user {}. Assigning no specific authorities.", email);
+                }
+
+                AppUserDetails studentDetails = new AppUserDetails(
                         studentId,
                         email,
                         authorities
@@ -60,6 +79,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         new UsernamePasswordAuthenticationToken(studentDetails, jwt, authorities);
 
                 SecurityContextHolder.getContext().setAuthentication(authentication);
+
+                log.info("User {} successfully authenticated with authorities: {}", studentDetails.getUsername(), authentication.getAuthorities());
             }
         } catch (Exception e) {
             log.error("Cannot set authentication: {}", e.getMessage(), e);
