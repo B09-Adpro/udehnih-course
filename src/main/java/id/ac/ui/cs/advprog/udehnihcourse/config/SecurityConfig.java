@@ -13,6 +13,11 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import static org.springframework.security.authorization.AuthorityAuthorizationManager.hasRole;
+import static org.springframework.security.authorization.AuthorizationManagers.not;
+import static org.springframework.security.authorization.AuthorizationManagers.allOf;
+
+
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -29,18 +34,42 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorizeRequests ->
                         authorizeRequests
                                  .requestMatchers(HttpMethod.POST,
-                                         "/api/tutors/apply")
-                                     .hasRole("STUDENT") // Hanya Student yang bisa apply
+                                         "/api/tutors/apply")// Hanya Student yang bisa apply
+                                .access(allOf(
+                                        hasRole("STUDENT"),
+                                        not(hasRole("TUTOR"))
+                                ))
+
                                 .requestMatchers(HttpMethod.GET,
                                         "/api/tutors/status")
                                 .hasAnyRole("STUDENT", "TUTOR") // Student dan Tutor yang bisa cek status dia diterima atau ngga
+
                                 .requestMatchers(HttpMethod.DELETE,
                                         "/api/tutors/apply")
-                                .hasRole("STUDENT") // Hanya Student yang bisa menggagalkan applicancenya sendiri
+                                .access(allOf(
+                                        hasRole("STUDENT"),
+                                        not(hasRole("TUTOR"))
+                                )) // Hanya Student yang bisa menggagalkan applicancenya sendiri
+
                                 .requestMatchers(HttpMethod.GET,
-                                        "/api/tutors/course")
+                                        "/api/tutors/courses")
                                 .hasRole("TUTOR") // Hanya Tutor yang bisa cek courses-nya sendiri
 
+                                .requestMatchers(HttpMethod.GET,
+                                        "/api/courses")
+                                .hasRole("TUTOR")
+
+                                .requestMatchers(HttpMethod.PUT,
+                                        "/api/courses/{courseId}")
+                                .hasRole("TUTOR")
+
+                                .requestMatchers(HttpMethod.DELETE,
+                                        "/api/courses/{courseId}")
+                                .hasRole("TUTOR")
+
+                                .requestMatchers(HttpMethod.GET,
+                                        "/api/courses/{courseId}/enrollments")
+                                .hasRole("TUTOR")
 
                                 .anyRequest().authenticated()
                 );
