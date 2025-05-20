@@ -9,6 +9,7 @@ import id.ac.ui.cs.advprog.udehnihcourse.service.CourseManagementService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import jakarta.persistence.EntityNotFoundException;
@@ -16,6 +17,7 @@ import org.springframework.security.access.AccessDeniedException;
 import id.ac.ui.cs.advprog.udehnihcourse.dto.course.CourseEnrollmentStudentDTO;
 import jakarta.validation.Valid;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import id.ac.ui.cs.advprog.udehnihcourse.security.AppUserDetails;
 
 import java.net.URI;
 import java.util.List;
@@ -32,9 +34,11 @@ public class CourseManagementController {
     private final CourseManagementService courseManagementService;
 
     @PostMapping
-    public ResponseEntity<CourseResponse> createCourse(@Valid @RequestBody CourseCreateRequest createRequest) {
-        // TODO: Get authenticated Tutor ID from Security Context
-        String tutorId = "tutor-test";
+    public ResponseEntity<CourseResponse> createCourse(
+            @Valid @RequestBody CourseCreateRequest createRequest,
+            @AuthenticationPrincipal AppUserDetails tutorDetails
+    ) {
+        String tutorId = String.valueOf(tutorDetails.getId());
 
         CourseResponse response = courseManagementService.createCourse(createRequest, tutorId);
 
@@ -46,28 +50,24 @@ public class CourseManagementController {
         return ResponseEntity.created(location).body(response);
     }
 
-//    @GetMapping("/tutor/courses")
-//    public ResponseEntity<List<TutorCourseListItem>> getMyCourses() {
-//        // TODO: Get authenticated Tutor ID from Security Context
-//        String tutorId = "tutor-test";
-//
-//        List<TutorCourseListItem> courses = courseManagementService.getCoursesByTutor(tutorId);
-//        return ResponseEntity.ok(courses);
-//    }
-
     @PutMapping("/{courseId}")
-    public ResponseEntity<CourseResponse> updateCourse(@PathVariable Long courseId, @Valid @RequestBody CourseUpdateRequest updateRequest) {
-        // TODO: Get authenticated Tutor ID from Security Context
-        String tutorId = "tutor-test";
+    public ResponseEntity<CourseResponse> updateCourse(
+            @PathVariable Long courseId,
+            @Valid @RequestBody CourseUpdateRequest updateRequest,
+            @AuthenticationPrincipal AppUserDetails tutorDetails
+    ) {
+        String tutorId = String.valueOf(tutorDetails.getId());
 
         CourseResponse response = courseManagementService.updateCourse(courseId, updateRequest, tutorId);
         return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{courseId}")
-    public ResponseEntity<GenericResponse> deleteCourse(@PathVariable Long courseId) {
-        // TODO: Get authenticated Tutor ID from Security Context
-        String tutorId = "tutor-test";
+    public ResponseEntity<GenericResponse> deleteCourse(
+            @PathVariable Long courseId,
+            @AuthenticationPrincipal AppUserDetails tutorDetails
+    ) {
+        String tutorId = String.valueOf(tutorDetails.getId());
 
         courseManagementService.deleteCourse(courseId, tutorId);
         return ResponseEntity.ok(new GenericResponse("Course deleted successfully"));
@@ -75,9 +75,10 @@ public class CourseManagementController {
 
     @GetMapping("/{courseId}/enrollments")
     public ResponseEntity<List<CourseEnrollmentStudentDTO>> getEnrolledStudents(
-            @PathVariable Long courseId) {
-        // TODO: Get authenticated Tutor ID from Security Context
-        String tutorId = "tutor-test";
+            @PathVariable Long courseId,
+            @AuthenticationPrincipal AppUserDetails tutorDetails
+    ) {
+        String tutorId = String.valueOf(tutorDetails.getId());
 
         List<CourseEnrollmentStudentDTO> students = courseManagementService.getEnrolledStudentsForCourse(courseId, tutorId);
         return ResponseEntity.ok(students);
