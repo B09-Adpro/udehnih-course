@@ -7,12 +7,12 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Collection;
 
 @Getter
-public class StudentDetails implements UserDetails {
+public class AppUserDetails implements UserDetails {
     private Long id;
     private String email;
     private Collection<? extends GrantedAuthority> authorities;
 
-    public StudentDetails(Long id, String email, Collection<? extends GrantedAuthority> authorities) {
+    public AppUserDetails(Long id, String email, Collection<? extends GrantedAuthority> authorities) {
         this.id = id;
         this.email = email;
         this.authorities = authorities;
