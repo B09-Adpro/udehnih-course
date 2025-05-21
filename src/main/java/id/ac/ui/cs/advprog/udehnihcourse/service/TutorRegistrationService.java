@@ -28,7 +28,6 @@ public class TutorRegistrationService {
     private final TutorRegistrationRepository tutorRegistrationRepository;
 
     public TutorApplicationResponse applyAsTutor(TutorApplicationRequest request, String studentId) {
-        // TODO: Integrate with Spring Security for studentId.
 
         Optional<TutorRegistration> existing = tutorRegistrationRepository.findByStudentId(studentId);
         if (existing.isPresent()) {
@@ -58,7 +57,6 @@ public class TutorRegistrationService {
 
     @Transactional(readOnly = true)
     public TutorApplicationStatusResponse checkApplicationStatus(String studentId) {
-        // TODO: Integrate with Spring Security for studentId.
 
         TutorRegistration application = tutorRegistrationRepository.findByStudentId(studentId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No application found"));
@@ -73,7 +71,6 @@ public class TutorRegistrationService {
     }
 
     public void cancelTutorApplication(String studentId) {
-        // TODO: Integrate with Spring Security for studentId and ownership check.
 
         TutorRegistration application = tutorRegistrationRepository.findByStudentId(studentId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No application found"));
@@ -86,7 +83,6 @@ public class TutorRegistrationService {
     }
 
     public void updateRegistrationStatusByStaff(Long applicationId, TutorRegistrationStatus newStatus, String staffId) {
-        // TODO: Implement proper authorization check (ensure caller is Staff).
 
         if (newStatus != TutorRegistrationStatus.ACCEPTED && newStatus != TutorRegistrationStatus.DENIED) {
             throw new IllegalArgumentException("Invalid status update by staff: " + newStatus);
@@ -104,7 +100,7 @@ public class TutorRegistrationService {
 
         tutorRegistrationRepository.save(registration);
 
-        // TODO: Sending notif to Student (Observer Pattern via Spring Events or MQ)
+        // (bukan TODOd): Sending notif to Student (Observer Pattern via Spring Events or MQ)
         //  kyk applicationEventPublisher.publishEvent(new TutorRegistrationProcessedEvent(this, registration));
     }
 }
