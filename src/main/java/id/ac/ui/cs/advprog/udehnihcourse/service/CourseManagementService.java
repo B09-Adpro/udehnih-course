@@ -1,11 +1,15 @@
 package id.ac.ui.cs.advprog.udehnihcourse.service;
 
+import id.ac.ui.cs.advprog.udehnihcourse.clients.AuthServiceClient;
+import id.ac.ui.cs.advprog.udehnihcourse.dto.auth.UserInfoResponse;
 import id.ac.ui.cs.advprog.udehnihcourse.dto.course.CourseEnrollmentStudentDTO;
 import id.ac.ui.cs.advprog.udehnihcourse.dto.course.CourseCreateRequest;
 import id.ac.ui.cs.advprog.udehnihcourse.dto.course.CourseResponse;
 import id.ac.ui.cs.advprog.udehnihcourse.dto.course.CourseUpdateRequest;
 import id.ac.ui.cs.advprog.udehnihcourse.dto.course.TutorCourseListItem;
 
+import id.ac.ui.cs.advprog.udehnihcourse.model.Enrollment;
+import id.ac.ui.cs.advprog.udehnihcourse.repository.EnrollmentRepository;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
 
@@ -33,7 +37,8 @@ public class CourseManagementService {
 
     private final CourseRepository courseRepository;
     private final TutorRegistrationRepository tutorRegistrationRepository;
-    // TODO: Inject service/client lain jika perlu (misal Enrollment Service untuk count)
+    private final EnrollmentRepository enrollmentRepository;
+    private final AuthServiceClient authServiceClient;
 
     private void verifyUserIsAcceptedTutor(String tutorId) {
         boolean isAcceptedTutor = tutorRegistrationRepository
@@ -107,15 +112,14 @@ public class CourseManagementService {
         List<Course> courses = courseRepository.findByTutorId(tutorId);
         return courses.stream()
                 .map(course -> {
-                    // TODO: Implementasi logic untuk mendapatkan enrollmentCount yang sebenarnya.
-                    int placeholderEnrollmentCount = course.getEnrollmentCount();
+                    long enrollmentCount = enrollmentRepository.countByCourseId(course.getId());
 
                     return TutorCourseListItem.builder()
                             .id(course.getId())
                             .title(course.getTitle())
                             .category(course.getCategory())
                             .price(course.getPrice())
-                            .enrollmentCount(placeholderEnrollmentCount)
+                            .enrollmentCount((int) enrollmentCount)
                             .createdAt(course.getCreatedAt())
                             .build();
                 })
@@ -128,18 +132,36 @@ public class CourseManagementService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found with ID: " + courseId));
         verifyCourseOwnership(course, tutorId);
 
-        // TODO: Implementasi logic untuk mengambil data student yang terdaftar.
-        List<CourseEnrollmentStudentDTO> enrolledStudents = new java.util.ArrayList<>();
+        List<Enrollment> enrollments = enrollmentRepository.findByCourseId(courseId);
+
+        List<CourseEnrollmentStudentDTO> enrolledStudents = enrollments.stream()
+                .map(enrollment -> {
+                    String studentName = "Student " + enrollment.getStudentId();
+
+                    UserInfoResponse userInfo = authServiceClient.getUserInfoById(String.valueOf(enrollment.getStudentId()));
+
+                    if (userInfo != null && userInfo.getName() != null && !userInfo.getName().isEmpty()) {
+                        studentName = userInfo.getName();
+                    } else {
+                        System.err.println("Could not retrieve name from Auth Service for student ID: " + enrollment.getStudentId() + ". Using default.");
+                    }
+
+                    return CourseEnrollmentStudentDTO.builder()
+                            .studentId(String.valueOf(enrollment.getStudentId()))
+                            .studentName(studentName)
+                            .enrolledAt(enrollment.getEnrolledAt())
+                            .build();
+                })
+                .collect(Collectors.toList());
 
         if (enrolledStudents.isEmpty()) {
-            System.out.println("DEBUG: No enrolled students (dummy) for course " + courseId);
+            System.out.println("DEBUG: No enrolled students found in database for course " + courseId);
         }
 
         return enrolledStudents;
     }
 
     public void verifyCourseOwnership(Course course, String tutorId) {
-        // TODO: Ambil tutorId dari Security Context jika tutorId parameter null/tidak dipakai
         if (course == null) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,"Course object is null in ownership check.");
         }
