@@ -22,3 +22,7 @@ jwt:
   secret-key: ${JWT_SECRET_KEY}
   expiration: ${JWT_EXPIRATION}
   refresh-expiration: ${JWT_REFRESH_EXPIRATION}
+
+services:
+  auth:
+    baseurl: ${AUTH_SERVICE_URL_LOCAL}
