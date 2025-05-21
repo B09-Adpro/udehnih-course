@@ -68,7 +68,6 @@ public class Course {
         section.setCourse(null);
     }
 
-    // TODO: implement logic-nya
     @Transient
     @Default
     private int enrollmentCount = 0;
