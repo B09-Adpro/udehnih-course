@@ -103,6 +103,10 @@ public class SecurityConfig {
                                         "api/courses/{courseId}/sections/{sectionId}/articles/{articleId}")
                                 .hasRole("TUTOR")
 
+                                .requestMatchers(HttpMethod.GET,
+                                        "api/courses/{courseId}/enrollments")
+                                .hasRole("TUTOR")
+
 
                                 .anyRequest().authenticated()
                 );
