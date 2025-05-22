@@ -12,6 +12,6 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class CourseEnrollmentStudentDTO {
     private String studentId;
-    private String studentName; // TODO: Tarik dari Auth
-    private LocalDateTime enrolledAt; // TODO: Tarik dari Enrollment
+    private String studentName;
+    private LocalDateTime enrolledAt;
 }
