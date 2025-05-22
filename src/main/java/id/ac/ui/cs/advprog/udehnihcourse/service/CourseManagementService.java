@@ -8,8 +8,9 @@ import id.ac.ui.cs.advprog.udehnihcourse.dto.course.CourseResponse;
 import id.ac.ui.cs.advprog.udehnihcourse.dto.course.CourseUpdateRequest;
 import id.ac.ui.cs.advprog.udehnihcourse.dto.course.TutorCourseListItem;
 
-import id.ac.ui.cs.advprog.udehnihcourse.model.Enrollment;
+import id.ac.ui.cs.advprog.udehnihcourse.model.*;
 import id.ac.ui.cs.advprog.udehnihcourse.repository.EnrollmentRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
 
@@ -17,8 +18,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import id.ac.ui.cs.advprog.udehnihcourse.model.Course;
-import id.ac.ui.cs.advprog.udehnihcourse.model.TutorRegistrationStatus;
 import id.ac.ui.cs.advprog.udehnihcourse.repository.CourseRepository;
 import id.ac.ui.cs.advprog.udehnihcourse.repository.TutorRegistrationRepository;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +32,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class CourseManagementService {
 
     private final CourseRepository courseRepository;
@@ -58,6 +58,7 @@ public class CourseManagementService {
                 .category(request.getCategory())
                 .price(request.getPrice() == null ? java.math.BigDecimal.ZERO : request.getPrice())
                 .tutorId(tutorId)
+                .status(CourseStatus.DRAFT)
                 .build();
 
         Course savedCourse = courseRepository.save(course);
@@ -65,6 +66,7 @@ public class CourseManagementService {
         return CourseResponse.builder()
                 .message("Course created successfully")
                 .courseId(savedCourse.getId())
+                .status(savedCourse.getStatus())
                 .build();
     }
 
@@ -72,9 +74,8 @@ public class CourseManagementService {
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Course not found with ID: " + courseId));
 
-        if (!course.getTutorId().equals(tutorId)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Not authorized to update this course");
-        }
+        verifyCourseOwnership(course, tutorId);
+        verifyCourseIsModifiable(course);
 
         if (request.getTitle() != null) {
             course.setTitle(request.getTitle());
@@ -98,9 +99,7 @@ public class CourseManagementService {
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found with ID: " + courseId));
 
-        if (!course.getTutorId().equals(tutorId)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not authorized to delete this course");
-        }
+        verifyCourseOwnership(course, tutorId);
 
         courseRepository.delete(course);
     }
@@ -112,7 +111,12 @@ public class CourseManagementService {
         List<Course> courses = courseRepository.findByTutorId(tutorId);
         return courses.stream()
                 .map(course -> {
+                    log.debug("DEBUG: Processing Course ID: " + course.getId());
+
                     long enrollmentCount = enrollmentRepository.countByCourseId(course.getId());
+
+                    CourseStatus currentStatus = course.getStatus();
+                    log.debug("DEBUG: Course ID: " + course.getId() + ", Status from Entity: " + currentStatus);
 
                     return TutorCourseListItem.builder()
                             .id(course.getId())
@@ -121,6 +125,7 @@ public class CourseManagementService {
                             .price(course.getPrice())
                             .enrollmentCount((int) enrollmentCount)
                             .createdAt(course.getCreatedAt())
+                            .status(currentStatus)
                             .build();
                 })
                 .collect(Collectors.toList());
@@ -161,12 +166,51 @@ public class CourseManagementService {
         return enrolledStudents;
     }
 
+    public void submitCourseForReview(Long courseId, String tutorId) {
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found with ID: " + courseId));
+        verifyCourseOwnership(course, tutorId);
+
+        if (course.getStatus() != CourseStatus.DRAFT && course.getStatus() != CourseStatus.REJECTED) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Only courses in DRAFT or REJECTED status can be submitted for review. Current status: " + course.getStatus());
+        }
+
+        if (course.getSections() == null || course.getSections().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Course must have at least one section to be submitted for review.");
+        }
+
+        boolean allSectionsHaveArticles = true;
+        for (Section section : course.getSections()) {
+            if (section.getArticles() == null || section.getArticles().isEmpty()) {
+                allSectionsHaveArticles = false;
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Section '" + section.getTitle() + "' must have at least one article to be submitted for review.");
+            }
+        }
+
+        course.setStatus(CourseStatus.PENDING_REVIEW);
+        courseRepository.save(course);
+
+        System.out.println("Course " + courseId + " submitted for review by tutor " + tutorId);
+    }
+
+
     public void verifyCourseOwnership(Course course, String tutorId) {
         if (course == null) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,"Course object is null in ownership check.");
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Course object is null in ownership check.");
         }
         if (!course.getTutorId().equals(tutorId)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Tutor " + tutorId + " is not authorized for this course.");
+        }
+    }
+
+    public void verifyCourseIsModifiable(Course course) {
+        if (course == null) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Course object is null for status check.");
+        }
+        if (course.getStatus() == CourseStatus.PENDING_REVIEW) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Course '" + course.getTitle() + "' cannot be modified while it is PENDING_REVIEW.");
         }
     }
 }
