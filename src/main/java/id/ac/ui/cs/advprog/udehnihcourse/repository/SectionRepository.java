@@ -10,4 +10,5 @@ import java.util.Optional;
 public interface SectionRepository extends JpaRepository<Section, Long> {
     List<Section> findByCourseId(Long courseId);
     Optional<Section> findByIdAndCourseId(Long sectionId, Long courseId);
+    long countByCourseId(Long courseId);
 }
