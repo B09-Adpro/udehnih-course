@@ -107,6 +107,10 @@ public class SecurityConfig {
                                         "api/courses/{courseId}/enrollments")
                                 .hasRole("TUTOR")
 
+                                .requestMatchers(HttpMethod.POST,
+                                        "api/courses/{courseId}/submit-review")
+                                .hasRole("TUTOR")
+
 
                                 .anyRequest().authenticated()
                 );
