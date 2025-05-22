@@ -18,6 +18,7 @@ import id.ac.ui.cs.advprog.udehnihcourse.dto.course.CourseEnrollmentStudentDTO;
 import jakarta.validation.Valid;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import id.ac.ui.cs.advprog.udehnihcourse.security.AppUserDetails;
+import id.ac.ui.cs.advprog.udehnihcourse.dto.GenericResponse;
 
 import java.net.URI;
 import java.util.List;
@@ -82,6 +83,19 @@ public class CourseManagementController {
 
         List<CourseEnrollmentStudentDTO> students = courseManagementService.getEnrolledStudentsForCourse(courseId, tutorId);
         return ResponseEntity.ok(students);
+    }
+
+    @PostMapping("/{courseId}/submit-review")
+    public ResponseEntity<GenericResponse> submitMyCourseForReview(
+            @PathVariable Long courseId,
+            @AuthenticationPrincipal AppUserDetails tutorDetails) {
+        if (tutorDetails == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not authenticated");
+        }
+        String tutorId = String.valueOf(tutorDetails.getId());
+
+        courseManagementService.submitCourseForReview(courseId, tutorId);
+        return ResponseEntity.ok(new GenericResponse("Course with ID " + courseId + " submitted for review successfully."));
     }
 
 }
