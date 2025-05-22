@@ -10,11 +10,13 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.security.access.AccessDeniedException;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -46,8 +48,14 @@ public class CourseContentController {
     }
 
     @GetMapping("/courses/{courseId}/sections")
-    public ResponseEntity<List<SectionResponse>> getSections(@PathVariable Long courseId) {
-        List<SectionResponse> sections = courseContentService.getSectionsByCourse(courseId);
+    public ResponseEntity<List<SectionResponse>> getSections(
+            @PathVariable Long courseId,
+            @AuthenticationPrincipal AppUserDetails userDetails) {
+
+        String userId = String.valueOf(userDetails.getId());
+        Collection<? extends GrantedAuthority> authorities = userDetails.getAuthorities();
+
+        List<SectionResponse> sections = courseContentService.getSectionsByCourseForUser(courseId, userId, authorities);
         return ResponseEntity.ok(sections);
     }
 
@@ -103,8 +111,15 @@ public class CourseContentController {
     }
 
     @GetMapping("/courses/{courseId}/sections/{sectionId}/articles")
-    public ResponseEntity<List<ArticleResponse>> getArticles(@PathVariable Long sectionId) {
-        List<ArticleResponse> articles = courseContentService.getArticlesBySection(sectionId);
+    public ResponseEntity<List<ArticleResponse>> getArticles(
+            @PathVariable Long sectionId,
+            @AuthenticationPrincipal AppUserDetails userDetails
+            ) {
+        String userId = String.valueOf(userDetails.getId());
+
+        Collection<? extends GrantedAuthority> authorities = userDetails.getAuthorities();
+
+        List<ArticleResponse> articles = courseContentService.getArticlesBySectionForUser(sectionId, userId, authorities);
         return ResponseEntity.ok(articles);
     }
 
