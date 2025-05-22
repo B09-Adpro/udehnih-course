@@ -40,7 +40,7 @@ public class Enrollment {
     @Column(name = "status", nullable = false)
     @Enumerated(EnumType.STRING)
     @Builder.Default
-    private EnrollmentStatus status = EnrollmentStatus.ENROLLED;
+    private EnrollmentStatus status = EnrollmentStatus.PENDING;
 
     @Override
     public boolean equals(Object o) {
