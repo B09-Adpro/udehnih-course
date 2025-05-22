@@ -77,7 +77,7 @@ public class SecurityConfig {
 
                                 .requestMatchers(HttpMethod.GET,
                                         "api/courses/{courseId}/sections")
-                                .hasRole("TUTOR")
+                                .authenticated()
 
                                 .requestMatchers(HttpMethod.PUT,
                                         "api/courses/{courseId}/sections/{sectionId}")
@@ -93,7 +93,7 @@ public class SecurityConfig {
 
                                 .requestMatchers(HttpMethod.GET,
                                         "api/courses/{courseId}/sections/{sectionId}/articles")
-                                .hasRole("TUTOR")
+                                .authenticated()
 
                                 .requestMatchers(HttpMethod.PUT,
                                         "api/courses/{courseId}/sections/{sectionId}/articles/{articlesId}")
