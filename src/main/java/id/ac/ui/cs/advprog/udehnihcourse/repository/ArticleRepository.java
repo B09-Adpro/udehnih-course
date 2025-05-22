@@ -10,4 +10,5 @@ import java.util.Optional;
 public interface ArticleRepository extends JpaRepository<Article, Long>{
     List<Article> findBySectionId(Long sectionId);
     Optional<Article> findByIdAndSectionId(Long articleId, Long sectionId);
+    long countBySectionId(Long sectionId);
 }
