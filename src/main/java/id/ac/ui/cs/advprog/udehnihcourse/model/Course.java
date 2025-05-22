@@ -46,6 +46,13 @@ public class Course {
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal price = BigDecimal.ZERO;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    @Default
+    private CourseStatus status = CourseStatus.DRAFT;
+
+
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
@@ -58,6 +65,10 @@ public class Course {
     @Default
     private List<Section> sections = new ArrayList<>();
 
+    @Transient
+    @Default
+    private int enrollmentCount = 0;
+
     public void addSection(Section section) {
         sections.add(section);
         section.setCourse(this);
@@ -68,7 +79,5 @@ public class Course {
         section.setCourse(null);
     }
 
-    @Transient
-    @Default
-    private int enrollmentCount = 0;
+
 }
