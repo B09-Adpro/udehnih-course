@@ -9,6 +9,7 @@ class PaymentRequestDTOTest {
     @Test
     void testConstructorAndGetters() {
         // Arrange
+        Long enrollmentId = 5L;
         Long studentId = 1L;
         Long courseId = 2L;
         BigDecimal amount = new BigDecimal("199.99");
@@ -16,35 +17,43 @@ class PaymentRequestDTOTest {
         String paymentMethod = "BANK_TRANSFER";
 
         // Act
-        PaymentRequestDTO dto = new PaymentRequestDTO(studentId, courseId, amount, paymentMethod, timestamp);
+        PaymentRequestDTO dto = new PaymentRequestDTO(enrollmentId, studentId, courseId, amount, paymentMethod, timestamp);
 
         // Assert
+        assertEquals(enrollmentId, dto.getEnrollmentId());
         assertEquals(studentId, dto.getStudentId());
         assertEquals(courseId, dto.getCourseId());
         assertEquals(amount, dto.getAmount());
+        assertEquals(paymentMethod, dto.getPaymentMethod());
         assertEquals(timestamp, dto.getTimestamp());
     }
 
     @Test
     void testBuilder() {
         // Arrange
+        Long enrollmentId = 5L;
         Long studentId = 1L;
         Long courseId = 2L;
         BigDecimal amount = new BigDecimal("199.99");
+        String paymentMethod = "CREDIT_CARD";
         Long timestamp = System.currentTimeMillis();
 
         // Act
         PaymentRequestDTO dto = PaymentRequestDTO.builder()
+                .enrollmentId(enrollmentId)
                 .studentId(studentId)
                 .courseId(courseId)
                 .amount(amount)
+                .paymentMethod(paymentMethod)
                 .timestamp(timestamp)
                 .build();
 
         // Assert
+        assertEquals(enrollmentId, dto.getEnrollmentId());
         assertEquals(studentId, dto.getStudentId());
         assertEquals(courseId, dto.getCourseId());
         assertEquals(amount, dto.getAmount());
+        assertEquals(paymentMethod, dto.getPaymentMethod());
         assertEquals(timestamp, dto.getTimestamp());
     }
 
@@ -52,21 +61,27 @@ class PaymentRequestDTOTest {
     void testSetters() {
         // Arrange
         PaymentRequestDTO dto = new PaymentRequestDTO();
+        Long enrollmentId = 5L;
         Long studentId = 1L;
         Long courseId = 2L;
         BigDecimal amount = new BigDecimal("199.99");
+        String paymentMethod = "BANK_TRANSFER";
         Long timestamp = System.currentTimeMillis();
 
         // Act
+        dto.setEnrollmentId(enrollmentId);
         dto.setStudentId(studentId);
         dto.setCourseId(courseId);
         dto.setAmount(amount);
+        dto.setPaymentMethod(paymentMethod);
         dto.setTimestamp(timestamp);
 
         // Assert
+        assertEquals(enrollmentId, dto.getEnrollmentId());
         assertEquals(studentId, dto.getStudentId());
         assertEquals(courseId, dto.getCourseId());
         assertEquals(amount, dto.getAmount());
+        assertEquals(paymentMethod, dto.getPaymentMethod());
         assertEquals(timestamp, dto.getTimestamp());
     }
 
@@ -74,16 +89,20 @@ class PaymentRequestDTOTest {
     void testEqualsAndHashCode() {
         // Arrange
         PaymentRequestDTO dto1 = PaymentRequestDTO.builder()
+                .enrollmentId(5L)
                 .studentId(1L)
                 .courseId(2L)
                 .amount(new BigDecimal("199.99"))
+                .paymentMethod("CREDIT_CARD")
                 .timestamp(1000L)
                 .build();
 
         PaymentRequestDTO dto2 = PaymentRequestDTO.builder()
+                .enrollmentId(5L)
                 .studentId(1L)
                 .courseId(2L)
                 .amount(new BigDecimal("199.99"))
+                .paymentMethod("CREDIT_CARD")
                 .timestamp(1000L)
                 .build();
 
