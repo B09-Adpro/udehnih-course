@@ -8,7 +8,7 @@ class EnrollmentStatusTest {
     @Test
     void testEnrollmentStatusValues() {
         EnrollmentStatus[] statuses = EnrollmentStatus.values();
-        assertEquals(3, statuses.length);
+        assertEquals(4, statuses.length);
         assertEquals(EnrollmentStatus.ENROLLED, statuses[0]);
     }
 
