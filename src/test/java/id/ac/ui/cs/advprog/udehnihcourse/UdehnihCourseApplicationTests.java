@@ -2,8 +2,14 @@ package id.ac.ui.cs.advprog.udehnihcourse;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.TestPropertySource;
 
 @SpringBootTest
+@TestPropertySource(properties = {
+        "SERVER_PORT=8081",
+        "payment.service.baseurl=http://localhost:8082",
+        "PAYMENT_SERVICE_API_KEY=test-api-key-for-testing"
+})
 class UdehnihCourseApplicationTests {
 
     @Test
