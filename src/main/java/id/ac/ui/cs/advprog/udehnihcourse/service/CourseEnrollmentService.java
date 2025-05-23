@@ -1,9 +1,12 @@
 package id.ac.ui.cs.advprog.udehnihcourse.service;
 
+import id.ac.ui.cs.advprog.udehnihcourse.exception.AlreadyEnrolledException;
+import id.ac.ui.cs.advprog.udehnihcourse.exception.CourseNotFoundException;
+import id.ac.ui.cs.advprog.udehnihcourse.exception.EnrollmentNotFoundException;
+import id.ac.ui.cs.advprog.udehnihcourse.exception.PaymentInitiationFailedException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import java.math.BigDecimal;
-import java.util.HashMap;
 import java.util.Map;
 import id.ac.ui.cs.advprog.udehnihcourse.dto.coursebrowsing.*;
 import id.ac.ui.cs.advprog.udehnihcourse.model.*;
@@ -13,11 +16,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import jakarta.transaction.Transactional;
 
-import java.math.BigDecimal;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
+
+import static java.lang.System.out;
 
 @Service
 @RequiredArgsConstructor
@@ -30,29 +32,35 @@ public class CourseEnrollmentService {
     @Autowired
     private final EnrollmentRepository enrollmentRepository;
 
-    public EnrollmentDTO enrollStudentInCourse(Long studentId, Long courseId) {
+    @Autowired
+    private RestTemplate restTemplate;
+
+    @Value("${payment.service.url:http://localhost:8080}")
+    private String paymentServiceUrl;
+
+    public EnrollmentDTO enrollStudentInCourse(Long studentId, Long courseId, String paymentMethod ) {
         Course course = courseRepository.findById(courseId)
-                .orElseThrow(() -> new RuntimeException("Course not found"));
+                .orElseThrow(() -> new CourseNotFoundException("Course not found"));
 
         if (enrollmentRepository.existsByStudentIdAndCourseId(studentId, courseId)) {
-            throw new RuntimeException("Student is already enrolled in this course");
+            throw new AlreadyEnrolledException("Student is already enrolled in this course");
         }
 
-        boolean paymentSuccess = processPayment(studentId, courseId, course.getPrice());
-        if (!paymentSuccess) {
-            throw new RuntimeException("Payment failed for course enrollment");
+        boolean paymentInitiated = processPayment(studentId, courseId, course.getPrice(), paymentMethod);
+        if (!paymentInitiated) {
+            throw new PaymentInitiationFailedException("Gagal menginisiasi pembayaran");
         }
 
         Enrollment enrollment = Enrollment.builder()
                 .studentId(studentId)
                 .course(course)
-                .status(EnrollmentStatus.ENROLLED)
+                .status(EnrollmentStatus.PENDING)
                 .build();
 
         enrollment = enrollmentRepository.save(enrollment);
 
         return EnrollmentDTO.builder()
-                .message("Successfully enrolled in course")
+                .message("Pendaftaran kursus berhasil, menunggu verifikasi pembayaran")
                 .enrollmentId(enrollment.getId())
                 .courseTitle(course.getTitle())
                 .status(enrollment.getStatus().name())
@@ -73,25 +81,37 @@ public class CourseEnrollmentService {
         return enrolledCourses;
     }
 
-    private boolean processPayment(Long studentId, Long courseId, BigDecimal price) {
-        try {
-            // Create a simple map for the request
-            Map<String, Object> paymentRequest = new HashMap<>();
-            paymentRequest.put("studentId", studentId);
-            paymentRequest.put("courseId", courseId);
-            paymentRequest.put("amount", price);
+    public void processPaymentCallback(PaymentCallbackDTO callback) {
+        Enrollment enrollment = enrollmentRepository.findByStudentIdAndCourseId(
+                        callback.getStudentId(), callback.getCourseId())
+                .orElseThrow(() -> new EnrollmentNotFoundException("Pendaftaran tidak ditemukan"));
 
-            // Make the API call
-            Map<String, Object> response = restTemplate.postForObject(
-                    "/api/payments/process",
+        if (callback.isApproved()) {
+            enrollment.setStatus(EnrollmentStatus.ENROLLED);
+        } else {
+            enrollment.setStatus(EnrollmentStatus.PAYMENT_FAILED);
+        }
+    }
+
+    private boolean processPayment(Long studentId, Long courseId, BigDecimal price, String paymentMethod) {
+        try {
+            PaymentRequestDTO paymentRequest = PaymentRequestDTO.builder()
+                    .studentId(studentId)
+                    .courseId(courseId)
+                    .amount(price)
+                    .paymentMethod(paymentMethod)
+                    .timestamp(System.currentTimeMillis())
+                    .build();
+
+            PaymentResponseDTO response = restTemplate.postForObject(
+                    paymentServiceUrl + "/api/payments/process",
                     paymentRequest,
-                    Map.class
+                    PaymentResponseDTO.class
             );
 
-            // Check if payment was successful (assuming the API returns a success field)
-            return response != null && Boolean.TRUE.equals(response.get("success"));
+            return response != null && response.isSuccess();
         } catch (Exception e) {
-            // Log the exception
+            out.println(e);
             return false;
         }
     }
