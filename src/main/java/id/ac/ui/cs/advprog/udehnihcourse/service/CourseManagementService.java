@@ -11,11 +11,18 @@ import id.ac.ui.cs.advprog.udehnihcourse.dto.course.TutorCourseListItem;
 import id.ac.ui.cs.advprog.udehnihcourse.model.*;
 import id.ac.ui.cs.advprog.udehnihcourse.repository.EnrollmentRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 import id.ac.ui.cs.advprog.udehnihcourse.repository.CourseRepository;
@@ -39,6 +46,7 @@ public class CourseManagementService {
     private final TutorRegistrationRepository tutorRegistrationRepository;
     private final EnrollmentRepository enrollmentRepository;
     private final AuthServiceClient authServiceClient;
+
 
     private void verifyUserIsAcceptedTutor(String tutorId) {
         boolean isAcceptedTutor = tutorRegistrationRepository
@@ -137,9 +145,16 @@ public class CourseManagementService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found with ID: " + courseId));
         verifyCourseOwnership(course, tutorId);
 
-        List<Enrollment> enrollments = enrollmentRepository.findByCourseId(courseId);
+        List<Enrollment> enrolledAndPaidEnrollments = enrollmentRepository.findByCourseId(courseId).stream()
+                .filter(enrollment -> enrollment.getStatus() == EnrollmentStatus.ENROLLED)
+                .collect(Collectors.toList());
 
-        List<CourseEnrollmentStudentDTO> enrolledStudents = enrollments.stream()
+        if (enrolledAndPaidEnrollments.isEmpty()) {
+            log.info("No enrollments with status ENROLLED found for course ID: {}", courseId);
+            return Collections.emptyList();
+        }
+
+        List<CourseEnrollmentStudentDTO> enrolledStudents = enrolledAndPaidEnrollments.stream()
                 .map(enrollment -> {
                     String studentName = "Student " + enrollment.getStudentId();
 
@@ -165,6 +180,7 @@ public class CourseManagementService {
 
         return enrolledStudents;
     }
+
 
     public void submitCourseForReview(Long courseId, String tutorId) {
         Course course = courseRepository.findById(courseId)
