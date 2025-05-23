@@ -26,3 +26,7 @@ jwt:
 services:
   auth:
     baseurl: ${AUTH_SERVICE_URL_LOCAL}
+
+  payment:
+    baseurl: ${PAYMENT_SERVICE_URL_LOCAL}
+    api-key: ${PAYMENT_SERVICE_API_KEY}
