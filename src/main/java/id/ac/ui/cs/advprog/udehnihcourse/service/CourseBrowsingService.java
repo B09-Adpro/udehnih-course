@@ -30,10 +30,6 @@ import java.util.concurrent.atomic.AtomicLong;
 @RequiredArgsConstructor
 @Transactional
 public class CourseBrowsingService {
-
-    @Value("${payment.service.baseurl}")
-    private String paymentServiceUrl;
-
     @Autowired
     private CourseRepository courseRepository;
     private EnrollmentRepository enrollmentRepository;
