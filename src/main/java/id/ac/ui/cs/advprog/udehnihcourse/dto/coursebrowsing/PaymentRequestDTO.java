@@ -16,5 +16,6 @@ public class PaymentRequestDTO {
     private Long studentId;
     private Long courseId;
     private BigDecimal amount;
+    private String paymentMethod;
     private Long timestamp;
 }
