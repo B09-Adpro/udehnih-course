@@ -46,16 +46,18 @@ public class CourseEnrollmentService {
             throw new AlreadyEnrolledException("Student is already enrolled in this course");
         }
 
-        boolean paymentInitiated = processPayment(studentId, courseId, course.getPrice(), paymentMethod);
-        if (!paymentInitiated) {
-            throw new PaymentInitiationFailedException("Gagal menginisiasi pembayaran");
-        }
-
         Enrollment enrollment = Enrollment.builder()
                 .studentId(studentId)
                 .course(course)
                 .status(EnrollmentStatus.PENDING)
                 .build();
+
+        boolean paymentInitiated = processPayment(studentId, courseId, course.getPrice(), paymentMethod, enrollment.getId());
+        if (!paymentInitiated) {
+            enrollment.setStatus(EnrollmentStatus.PAYMENT_FAILED);
+            throw new PaymentInitiationFailedException("Gagal menginisiasi pembayaran");
+        }
+
 
         enrollment = enrollmentRepository.save(enrollment);
 
@@ -93,9 +95,10 @@ public class CourseEnrollmentService {
         }
     }
 
-    private boolean processPayment(Long studentId, Long courseId, BigDecimal price, String paymentMethod) {
+    private boolean processPayment(Long studentId, Long courseId, BigDecimal price, String paymentMethod, Long enrollmentId) {
         try {
             PaymentRequestDTO paymentRequest = PaymentRequestDTO.builder()
+                    .enrollmentId(enrollmentId)
                     .studentId(studentId)
                     .courseId(courseId)
                     .amount(price)
