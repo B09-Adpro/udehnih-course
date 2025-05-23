@@ -13,6 +13,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PaymentRequestDTO {
+    private Long enrollmentId;
     private Long studentId;
     private Long courseId;
     private BigDecimal amount;
