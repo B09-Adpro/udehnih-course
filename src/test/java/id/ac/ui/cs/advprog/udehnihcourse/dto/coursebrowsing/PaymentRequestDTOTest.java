@@ -13,9 +13,10 @@ class PaymentRequestDTOTest {
         Long courseId = 2L;
         BigDecimal amount = new BigDecimal("199.99");
         Long timestamp = System.currentTimeMillis();
+        String paymentMethod = "BANK_TRANSFER";
 
         // Act
-        PaymentRequestDTO dto = new PaymentRequestDTO(studentId, courseId, amount, timestamp);
+        PaymentRequestDTO dto = new PaymentRequestDTO(studentId, courseId, amount, paymentMethod, timestamp);
 
         // Assert
         assertEquals(studentId, dto.getStudentId());
