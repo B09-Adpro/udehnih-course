@@ -60,6 +60,7 @@ public class CourseEnrollmentService {
         enrollment = enrollmentRepository.save(enrollment);
 
         return EnrollmentDTO.builder()
+                .enrollmentId(enrollment.getId())
                 .message("Pendaftaran kursus berhasil, menunggu verifikasi pembayaran")
                 .enrollmentId(enrollment.getId())
                 .courseTitle(course.getTitle())
@@ -82,8 +83,7 @@ public class CourseEnrollmentService {
     }
 
     public void processPaymentCallback(PaymentCallbackDTO callback) {
-        Enrollment enrollment = enrollmentRepository.findByStudentIdAndCourseId(
-                        callback.getStudentId(), callback.getCourseId())
+        Enrollment enrollment = enrollmentRepository.findById(callback.getEnrollmentId())
                 .orElseThrow(() -> new EnrollmentNotFoundException("Pendaftaran tidak ditemukan"));
 
         if (callback.isApproved()) {
