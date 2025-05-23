@@ -116,34 +116,54 @@ class CourseEnrollmentServiceTest {
     @Test
     void whenProcessPaymentCallback_withApprovedPayment_thenUpdateStatus() {
         PaymentCallbackDTO callback = PaymentCallbackDTO.builder()
+                .enrollmentId(1L)
                 .studentId(101L)
                 .courseId(1L)
                 .approved(true)
                 .build();
 
-        when(enrollmentRepository.findByStudentIdAndCourseId(101L, 1L))
+        when(enrollmentRepository.findById(1L))
                 .thenReturn(Optional.of(enrollment));
 
         courseEnrollmentService.processPaymentCallback(callback);
 
         assertEquals(EnrollmentStatus.ENROLLED, enrollment.getStatus());
-        verify(enrollmentRepository).findByStudentIdAndCourseId(101L, 1L);
+        verify(enrollmentRepository).findById(1L);
     }
 
     @Test
     void whenProcessPaymentCallback_withRejectedPayment_thenUpdateStatus() {
         PaymentCallbackDTO callback = PaymentCallbackDTO.builder()
+                .enrollmentId(1L)
                 .studentId(101L)
                 .courseId(1L)
                 .approved(false)
                 .build();
 
-        when(enrollmentRepository.findByStudentIdAndCourseId(101L, 1L))
+        when(enrollmentRepository.findById(1L))
                 .thenReturn(Optional.of(enrollment));
 
         courseEnrollmentService.processPaymentCallback(callback);
 
         assertEquals(EnrollmentStatus.PAYMENT_FAILED, enrollment.getStatus());
-        verify(enrollmentRepository).findByStudentIdAndCourseId(101L, 1L);
+        verify(enrollmentRepository).findById(1L);
+    }
+
+    @Test
+    void whenProcessPaymentCallback_withNonExistentEnrollment_thenThrowException() {
+        PaymentCallbackDTO callback = PaymentCallbackDTO.builder()
+                .enrollmentId(999L)
+                .studentId(101L)
+                .courseId(1L)
+                .approved(true)
+                .build();
+
+        when(enrollmentRepository.findById(999L))
+                .thenReturn(Optional.empty());
+
+        assertThrows(EnrollmentNotFoundException.class, () ->
+                courseEnrollmentService.processPaymentCallback(callback));
+
+        verify(enrollmentRepository).findById(999L);
     }
 }
