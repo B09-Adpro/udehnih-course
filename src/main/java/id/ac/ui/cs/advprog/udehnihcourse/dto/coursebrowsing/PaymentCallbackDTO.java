@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PaymentCallbackDTO {
+    private Long enrollmentId;
     private Long studentId;
     private Long courseId;
     private boolean approved;
