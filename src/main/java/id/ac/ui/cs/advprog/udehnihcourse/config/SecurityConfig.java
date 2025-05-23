@@ -33,6 +33,10 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorizeRequests ->
                         authorizeRequests
+                                .requestMatchers(HttpMethod.PUT,
+                                        "/api/internal/tutor-applications/**")
+                                .hasRole("STAFF")
+
                                  .requestMatchers(HttpMethod.POST,
                                          "/api/tutors/apply")
                                 .access(allOf(
