@@ -1,7 +1,12 @@
 package id.ac.ui.cs.advprog.udehnihcourse.service;
 
+import id.ac.ui.cs.advprog.udehnihcourse.exception.ArticleNotFoundException;
+import id.ac.ui.cs.advprog.udehnihcourse.exception.CourseNotFoundException;
+import id.ac.ui.cs.advprog.udehnihcourse.exception.SectionNotFoundException;
+import id.ac.ui.cs.advprog.udehnihcourse.exception.UnauthorizedAccessException;
 import id.ac.ui.cs.advprog.udehnihcourse.repository.EnrollmentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import id.ac.ui.cs.advprog.udehnihcourse.model.Article;
@@ -25,7 +30,10 @@ import java.util.concurrent.atomic.AtomicLong;
 @RequiredArgsConstructor
 @Transactional
 public class CourseBrowsingService {
-    
+
+    @Value("${payment.service.baseurl}")
+    private String paymentServiceUrl;
+
     @Autowired
     private CourseRepository courseRepository;
     private EnrollmentRepository enrollmentRepository;
@@ -45,7 +53,7 @@ public class CourseBrowsingService {
     }
 
     public CourseDetailDTO getCourseById(Long id, Long studentId) {
-        Course course = courseRepository.findById(id).orElseThrow(() -> new RuntimeException("Course not found"));
+        Course course = courseRepository.findById(id).orElseThrow(() -> new CourseNotFoundException("Course not found"));
 
         boolean isEnrolled = isEnrolled(studentId, id);
 
@@ -66,18 +74,18 @@ public class CourseBrowsingService {
     public SectionDTO getSectionById(Long courseId, Long sectionId, Long studentId) {
         // Verify course exists
         Course course = courseRepository.findById(courseId)
-                .orElseThrow(() -> new RuntimeException("Course not found"));
+                .orElseThrow(() -> new CourseNotFoundException("Course not found"));
 
         // Check enrollment
         if (!isEnrolled(studentId, courseId)) {
-            throw new RuntimeException("Student is not enrolled in this course");
+            throw new UnauthorizedAccessException("Student is not enrolled in this course");
         }
 
         // Find the section in the course
         Section section = course.getSections().stream()
                 .filter(s -> s.getId().equals(sectionId))
                 .findFirst()
-                .orElseThrow(() -> new RuntimeException("Section not found in this course"));
+                .orElseThrow(() -> new SectionNotFoundException("Section not found in this course"));
 
         // Calculate section order within course
         AtomicLong sectionOrder = new AtomicLong(1);
@@ -93,10 +101,10 @@ public class CourseBrowsingService {
 
     public ArticleDTO getArticleById(Long courseId, Long articleId, Long studentId) {
         Course course = courseRepository.findById(courseId)
-                .orElseThrow(() -> new RuntimeException("Course not found"));
+                .orElseThrow(() -> new CourseNotFoundException("Course not found"));
 
         if (!isEnrolled(studentId, courseId)) {
-            throw new RuntimeException("Student is not enrolled in this course");
+            throw new UnauthorizedAccessException("Student is not enrolled in this course");
         }
 
         for (Section section : course.getSections()) {
@@ -120,7 +128,7 @@ public class CourseBrowsingService {
             }
         }
 
-        throw new RuntimeException("Article not found in this course");
+        throw new ArticleNotFoundException("Article not found in this course");
     }
 
     private CourseListDTO convertToDto(Course course) {
