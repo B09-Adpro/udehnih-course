@@ -15,6 +15,7 @@ import jakarta.validation.Valid;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import id.ac.ui.cs.advprog.udehnihcourse.security.AppUserDetails;
 import id.ac.ui.cs.advprog.udehnihcourse.dto.GenericResponse;
+import id.ac.ui.cs.advprog.udehnihcourse.dto.course.CourseDetailResponse;
 
 import java.net.URI;
 import java.util.List;
