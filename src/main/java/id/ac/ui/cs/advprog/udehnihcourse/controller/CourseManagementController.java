@@ -1,9 +1,6 @@
 package id.ac.ui.cs.advprog.udehnihcourse.controller;
 
-import id.ac.ui.cs.advprog.udehnihcourse.dto.course.CourseCreateRequest;
-import id.ac.ui.cs.advprog.udehnihcourse.dto.course.CourseResponse;
-import id.ac.ui.cs.advprog.udehnihcourse.dto.course.CourseUpdateRequest;
-import id.ac.ui.cs.advprog.udehnihcourse.dto.course.TutorCourseListItem;
+import id.ac.ui.cs.advprog.udehnihcourse.dto.course.*;
 import id.ac.ui.cs.advprog.udehnihcourse.dto.GenericResponse;
 import id.ac.ui.cs.advprog.udehnihcourse.service.CourseManagementService;
 import lombok.RequiredArgsConstructor;
@@ -14,7 +11,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.security.access.AccessDeniedException;
-import id.ac.ui.cs.advprog.udehnihcourse.dto.course.CourseEnrollmentStudentDTO;
 import jakarta.validation.Valid;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import id.ac.ui.cs.advprog.udehnihcourse.security.AppUserDetails;
@@ -49,6 +45,16 @@ public class CourseManagementController {
                 .buildAndExpand(response.getCourseId())
                 .toUri();
         return ResponseEntity.created(location).body(response);
+    }
+
+    @GetMapping("/{courseId}")
+    public ResponseEntity<CourseDetailResponse> getCourseById(
+            @PathVariable Long courseId,
+            @AuthenticationPrincipal AppUserDetails tutorDetails
+    ) {
+        String tutorId = String.valueOf(tutorDetails.getId());
+        CourseDetailResponse response = courseManagementService.getCourseDetailById(courseId, tutorId);
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("/{courseId}")
