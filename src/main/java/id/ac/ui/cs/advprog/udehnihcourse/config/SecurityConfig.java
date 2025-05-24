@@ -55,10 +55,6 @@ public class SecurityConfig {
                                         "/api/tutors/courses")
                                 .hasRole("TUTOR")
 
-                                .requestMatchers(HttpMethod.GET,
-                                        "/api/courses")
-                                .hasRole("TUTOR")
-
                                 .requestMatchers(HttpMethod.PUT,
                                         "/api/courses/{courseId}")
                                 .hasRole("TUTOR")
