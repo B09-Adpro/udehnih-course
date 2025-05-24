@@ -1,5 +1,6 @@
 package id.ac.ui.cs.advprog.udehnihcourse.controller;
 
+import id.ac.ui.cs.advprog.udehnihcourse.dto.GenericResponse;
 import id.ac.ui.cs.advprog.udehnihcourse.dto.article.ArticleRequest;
 import id.ac.ui.cs.advprog.udehnihcourse.dto.article.ArticleResponse;
 import id.ac.ui.cs.advprog.udehnihcourse.dto.section.SectionRequest;
@@ -15,7 +16,9 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.net.URI;
 import java.util.Collection;
 import java.util.List;
 
@@ -41,7 +44,14 @@ public class CourseContentController {
 
         try {
             SectionResponse createdSection = courseContentService.addSectionToCourse(courseId, sectionRequest, tutorId);
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdSection);
+
+            URI location = ServletUriComponentsBuilder
+                    .fromCurrentRequest()
+                    .path("/{id}")
+                    .buildAndExpand(createdSection.getId())
+                    .toUri();
+
+            return ResponseEntity.created(location).body(createdSection);
         } catch (AccessDeniedException e) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage(), e);
         }
@@ -77,7 +87,7 @@ public class CourseContentController {
     }
 
     @DeleteMapping("/courses/{courseId}/sections/{sectionId}")
-    public ResponseEntity<Void> deleteSection(
+    public ResponseEntity<GenericResponse> deleteSection(
             @PathVariable Long courseId,
             @PathVariable Long sectionId,
             @AuthenticationPrincipal AppUserDetails tutorDetails
@@ -87,7 +97,7 @@ public class CourseContentController {
 
         try {
             courseContentService.deleteSection(courseId, sectionId, tutorId);
-            return ResponseEntity.noContent().build();
+            return ResponseEntity.ok(new GenericResponse("Section deleted successfully"));
         } catch (AccessDeniedException e) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage(), e);
         }
@@ -95,6 +105,7 @@ public class CourseContentController {
 
     @PostMapping("/courses/{courseId}/sections/{sectionId}/articles")
     public ResponseEntity<ArticleResponse> addArticle(
+            @PathVariable Long courseId,
             @PathVariable Long sectionId,
             @Valid @RequestBody ArticleRequest articleRequest,
             @AuthenticationPrincipal AppUserDetails tutorDetails
@@ -104,7 +115,14 @@ public class CourseContentController {
 
         try {
             ArticleResponse createdArticle = courseContentService.addArticleToSection(sectionId, articleRequest, tutorId);
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdArticle);
+
+            URI location = ServletUriComponentsBuilder
+                    .fromCurrentRequest()
+                    .path("/{id}")
+                    .buildAndExpand(createdArticle.getId())
+                    .toUri();
+
+            return ResponseEntity.created(location).body(createdArticle);
         } catch (AccessDeniedException e) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage(), e);
         }
@@ -112,11 +130,11 @@ public class CourseContentController {
 
     @GetMapping("/courses/{courseId}/sections/{sectionId}/articles")
     public ResponseEntity<List<ArticleResponse>> getArticles(
+            @PathVariable Long courseId,
             @PathVariable Long sectionId,
             @AuthenticationPrincipal AppUserDetails userDetails
             ) {
         String userId = String.valueOf(userDetails.getId());
-
         Collection<? extends GrantedAuthority> authorities = userDetails.getAuthorities();
 
         List<ArticleResponse> articles = courseContentService.getArticlesBySectionForUser(sectionId, userId, authorities);
@@ -126,6 +144,7 @@ public class CourseContentController {
 
     @PutMapping("/courses/{courseId}/sections/{sectionId}/articles/{articleId}")
     public ResponseEntity<ArticleResponse> updateArticle(
+            @PathVariable Long courseId,
             @PathVariable Long sectionId,
             @PathVariable Long articleId,
             @Valid @RequestBody ArticleRequest articleRequest,
@@ -143,7 +162,8 @@ public class CourseContentController {
     }
 
     @DeleteMapping("/courses/{courseId}/sections/{sectionId}/articles/{articleId}")
-    public ResponseEntity<Void> deleteArticle(
+    public ResponseEntity<GenericResponse> deleteArticle(
+            @PathVariable Long courseId,
             @PathVariable Long sectionId,
             @PathVariable Long articleId,
             @AuthenticationPrincipal AppUserDetails tutorDetails
@@ -153,7 +173,7 @@ public class CourseContentController {
 
         try {
             courseContentService.deleteArticle(sectionId, articleId, tutorId);
-            return ResponseEntity.noContent().build();
+            return ResponseEntity.ok(new GenericResponse("Article deleted successfully"));
         } catch (AccessDeniedException e) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage(), e);
         }
