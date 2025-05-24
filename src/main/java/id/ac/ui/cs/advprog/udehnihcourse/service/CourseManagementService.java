@@ -2,11 +2,7 @@ package id.ac.ui.cs.advprog.udehnihcourse.service;
 
 import id.ac.ui.cs.advprog.udehnihcourse.clients.AuthServiceClient;
 import id.ac.ui.cs.advprog.udehnihcourse.dto.auth.UserInfoResponse;
-import id.ac.ui.cs.advprog.udehnihcourse.dto.course.CourseEnrollmentStudentDTO;
-import id.ac.ui.cs.advprog.udehnihcourse.dto.course.CourseCreateRequest;
-import id.ac.ui.cs.advprog.udehnihcourse.dto.course.CourseResponse;
-import id.ac.ui.cs.advprog.udehnihcourse.dto.course.CourseUpdateRequest;
-import id.ac.ui.cs.advprog.udehnihcourse.dto.course.TutorCourseListItem;
+import id.ac.ui.cs.advprog.udehnihcourse.dto.course.*;
 
 import id.ac.ui.cs.advprog.udehnihcourse.dto.staff.StaffCoursePendingReviewViewDTO;
 import id.ac.ui.cs.advprog.udehnihcourse.model.*;
@@ -279,5 +275,18 @@ public class CourseManagementService {
         log.info("Course ID {} status updated to {} by Staff {}", courseId, newStatus, staffId);
 
         return savedCourse;
+    }
+
+    @Transactional(readOnly = true)
+    public CourseDetailResponse getCourseDetailById(Long courseId, String tutorId) {
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found with ID: " + courseId));
+
+        verifyCourseOwnership(course, tutorId);
+
+        long enrollmentCount = enrollmentRepository.countByCourseId(course.getId());
+        course.setEnrollmentCount((int) enrollmentCount);
+
+        return CourseDetailResponse.fromEntity(course);
     }
 }
