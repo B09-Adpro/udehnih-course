@@ -12,8 +12,14 @@ import id.ac.ui.cs.advprog.udehnihcourse.model.TutorRegistration;
 import id.ac.ui.cs.advprog.udehnihcourse.model.TutorRegistrationStatus;
 import id.ac.ui.cs.advprog.udehnihcourse.repository.TutorRegistrationRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
+import id.ac.ui.cs.advprog.udehnihcourse.dto.staff.StaffTutorApplicationViewDTO;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -26,6 +32,7 @@ import java.util.Optional;
  * Design Pattern: Service Layer
  * Design Pattern: Dependency Injection
  */
+
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -77,6 +84,9 @@ public class TutorRegistrationService {
 
     @Transactional(readOnly = true)
     public TutorApplicationStatusResponse checkApplicationStatus(String studentId) {
+        log.info("SERVICE: checkApplicationStatus called for studentId: {}", studentId);
+        Authentication authInService = SecurityContextHolder.getContext().getAuthentication();
+        log.info("SERVICE: Authentication from SecurityContextHolder: {}", authInService);
 
         TutorRegistration application = tutorRegistrationRepository.findByStudentId(studentId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No application found"));
@@ -171,6 +181,21 @@ public class TutorRegistrationService {
         }
 
         return savedRegistration;
+    }
+
+    @Transactional(readOnly = true)
+    public List<StaffTutorApplicationViewDTO> findApplicationsByStatusForStaff(TutorRegistrationStatus statusFilter) {
+        List<TutorRegistration> applications;
+        if (statusFilter != null) {
+            log.info("SERVICE: Fetching tutor applications with status: {}", statusFilter);
+            applications = tutorRegistrationRepository.findByStatus(statusFilter);
+        } else {
+            log.info("SERVICE: Fetching all tutor applications (no status filter).");
+            applications = tutorRegistrationRepository.findAll();
+        }
+        return applications.stream()
+                .map(StaffTutorApplicationViewDTO::fromEntity)
+                .collect(Collectors.toList());
     }
 
 }
