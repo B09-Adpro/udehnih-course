@@ -114,6 +114,9 @@ public class SecurityConfig {
                                         "/api/courses/{courseId}/submit-review")
                                 .hasRole("TUTOR")
 
+                                .requestMatchers("/error")
+                                .permitAll()
+
 
                                 .anyRequest().authenticated()
                 );
