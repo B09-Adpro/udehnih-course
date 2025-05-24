@@ -80,6 +80,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(studentDetails, jwt, authorities);
 
+                log.info("Setting Authentication in SecurityContext. Principal: {}, Authorities: {}",
+                        authentication.getName(), authentication.getAuthorities());
                 SecurityContextHolder.getContext().setAuthentication(authentication);
 
                 log.info("User {} successfully authenticated with authorities: {}", studentDetails.getUsername(), authentication.getAuthorities());
