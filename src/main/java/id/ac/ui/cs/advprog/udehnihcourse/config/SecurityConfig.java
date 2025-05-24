@@ -17,6 +17,11 @@ import static org.springframework.security.authorization.AuthorityAuthorizationM
 import static org.springframework.security.authorization.AuthorizationManagers.not;
 import static org.springframework.security.authorization.AuthorizationManagers.allOf;
 
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import java.util.Arrays;
+
 
 @Configuration
 @EnableWebSecurity
@@ -25,10 +30,12 @@ import static org.springframework.security.authorization.AuthorizationManagers.a
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final CorsConfigurationSource corsConfigurationSource;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+                .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorizeRequests ->
@@ -63,48 +70,44 @@ public class SecurityConfig {
                                         "/api/courses/{courseId}")
                                 .hasRole("TUTOR")
 
+                                .requestMatchers(HttpMethod.POST,
+                                        "/api/courses/{courseId}/sections")
+                                .hasRole("TUTOR")
+
+                                .requestMatchers(HttpMethod.GET,
+                                        "/api/courses/{courseId}/sections")
+                                .authenticated()
+
+                                .requestMatchers(HttpMethod.PUT,
+                                        "/api/courses/{courseId}/sections/{sectionId}")
+                                .hasRole("TUTOR")
+
+                                .requestMatchers(HttpMethod.DELETE,
+                                        "/api/courses/{courseId}/sections/{sectionId}")
+                                .hasRole("TUTOR")
+
+                                .requestMatchers(HttpMethod.POST,
+                                        "/api/courses/{courseId}/sections/{sectionId}/articles")
+                                .hasRole("TUTOR")
+
+                                .requestMatchers(HttpMethod.GET,
+                                        "/api/courses/{courseId}/sections/{sectionId}/articles")
+                                .authenticated()
+
+                                .requestMatchers(HttpMethod.PUT,
+                                        "/api/courses/{courseId}/sections/{sectionId}/articles/{articleId}")
+                                .hasRole("TUTOR")
+
+                                .requestMatchers(HttpMethod.DELETE,
+                                        "/api/courses/{courseId}/sections/{sectionId}/articles/{articleId}")
+                                .hasRole("TUTOR")
+
                                 .requestMatchers(HttpMethod.GET,
                                         "/api/courses/{courseId}/enrollments")
                                 .hasRole("TUTOR")
 
                                 .requestMatchers(HttpMethod.POST,
-                                        "api/courses/{courseId}/sections")
-                                .hasRole("TUTOR")
-
-                                .requestMatchers(HttpMethod.GET,
-                                        "api/courses/{courseId}/sections")
-                                .authenticated()
-
-                                .requestMatchers(HttpMethod.PUT,
-                                        "api/courses/{courseId}/sections/{sectionId}")
-                                .hasRole("TUTOR")
-
-                                .requestMatchers(HttpMethod.DELETE,
-                                        "api/courses/{courseId}/sections/{sectionId}")
-                                .hasRole("TUTOR")
-
-                                .requestMatchers(HttpMethod.POST,
-                                        "api/courses/{courseId}/sections/{sectionId}/articles")
-                                .hasRole("TUTOR")
-
-                                .requestMatchers(HttpMethod.GET,
-                                        "api/courses/{courseId}/sections/{sectionId}/articles")
-                                .authenticated()
-
-                                .requestMatchers(HttpMethod.PUT,
-                                        "api/courses/{courseId}/sections/{sectionId}/articles/{articlesId}")
-                                .hasRole("TUTOR")
-
-                                .requestMatchers(HttpMethod.DELETE,
-                                        "api/courses/{courseId}/sections/{sectionId}/articles/{articleId}")
-                                .hasRole("TUTOR")
-
-                                .requestMatchers(HttpMethod.GET,
-                                        "api/courses/{courseId}/enrollments")
-                                .hasRole("TUTOR")
-
-                                .requestMatchers(HttpMethod.POST,
-                                        "api/courses/{courseId}/submit-review")
+                                        "/api/courses/{courseId}/submit-review")
                                 .hasRole("TUTOR")
 
 
