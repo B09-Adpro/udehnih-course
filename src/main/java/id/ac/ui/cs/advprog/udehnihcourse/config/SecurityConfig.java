@@ -41,7 +41,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorizeRequests ->
                         authorizeRequests
                                 .requestMatchers(HttpMethod.PUT,
-                                        "/api/internal/tutor-applications/**")
+                                        "/api/internal/**")
                                 .hasRole("STAFF")
 
                                  .requestMatchers(HttpMethod.POST,
