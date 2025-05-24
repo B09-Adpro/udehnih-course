@@ -8,6 +8,7 @@ import id.ac.ui.cs.advprog.udehnihcourse.dto.course.CourseResponse;
 import id.ac.ui.cs.advprog.udehnihcourse.dto.course.CourseUpdateRequest;
 import id.ac.ui.cs.advprog.udehnihcourse.dto.course.TutorCourseListItem;
 
+import id.ac.ui.cs.advprog.udehnihcourse.dto.staff.StaffCoursePendingReviewViewDTO;
 import id.ac.ui.cs.advprog.udehnihcourse.model.*;
 import id.ac.ui.cs.advprog.udehnihcourse.repository.EnrollmentRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -228,5 +229,55 @@ public class CourseManagementService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,
                     "Course '" + course.getTitle() + "' cannot be modified while it is PENDING_REVIEW.");
         }
+    }
+
+    @Transactional(readOnly = true)
+    public List<StaffCoursePendingReviewViewDTO> getCoursesPendingReviewForStaff() {
+        log.info("SERVICE: Fetching courses with status PENDING_REVIEW for Staff Dashboard.");
+        List<Course> pendingCourses = courseRepository.findByStatus(CourseStatus.PENDING_REVIEW);
+
+        return pendingCourses.stream()
+                .map(StaffCoursePendingReviewViewDTO::fromEntity)
+                .collect(Collectors.toList());
+    }
+
+    public Course reviewCourseByStaff(Long courseId, CourseStatus newStatus, String feedback, String staffId) {
+        log.info("Staff {} attempting to review course ID {} to status {} with feedback: '{}'",
+                staffId, courseId, newStatus, feedback);
+
+        if (newStatus != CourseStatus.PUBLISHED && newStatus != CourseStatus.REJECTED) {
+            log.error("Invalid review status by staff: {}. Must be PUBLISHED or REJECTED.", newStatus);
+            throw new IllegalArgumentException("Invalid review status from Staff. Must be PUBLISHED or REJECTED.");
+        }
+
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> {
+                    log.error("Course not found for ID: {} during review by staff.", courseId);
+                    return new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found with ID: " + courseId);
+                });
+
+        if (course.getStatus() != CourseStatus.PENDING_REVIEW) {
+            log.warn("Staff attempting to review course ID {} which is not PENDING_REVIEW. Current status: {}",
+                    courseId, course.getStatus());
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Course can only be reviewed if it's in PENDING_REVIEW status. Current status: " + course.getStatus());
+        }
+
+        if (newStatus == CourseStatus.PUBLISHED) {
+            if (course.getSections() == null || course.getSections().isEmpty()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Course must have at least one section to be published.");
+            }
+            for (Section section : course.getSections()) {
+                if (section.getArticles() == null || section.getArticles().isEmpty()) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Section '" + section.getTitle() + "' must have at least one article to be published.");
+                }
+            }
+        }
+
+        course.setStatus(newStatus);
+        Course savedCourse = courseRepository.save(course);
+        log.info("Course ID {} status updated to {} by Staff {}", courseId, newStatus, staffId);
+
+        return savedCourse;
     }
 }
