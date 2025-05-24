@@ -10,9 +10,12 @@ import id.ac.ui.cs.advprog.udehnihcourse.service.CourseManagementService;
 import id.ac.ui.cs.advprog.udehnihcourse.service.TutorRegistrationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import java.net.URI;
@@ -26,6 +29,8 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
  * REST Controller for handling Tutor application lifecycle by Students.
  * Design Pattern: Controller (REST)
  */
+
+@Slf4j
 @RestController
 @RequestMapping("/api/tutors")
 @RequiredArgsConstructor
@@ -57,6 +62,10 @@ public class TutorManagementController {
     public ResponseEntity<TutorApplicationStatusResponse> checkApplicationStatus(
             @AuthenticationPrincipal AppUserDetails studentDetails
     ) {
+
+        log.info("CONTROLLER: checkApplicationStatus called. Principal: {}", studentDetails);
+        Authentication authInController = SecurityContextHolder.getContext().getAuthentication();
+        log.info("CONTROLLER: Authentication from SecurityContextHolder: {}", authInController);
 
         String studentId = String.valueOf(studentDetails.getId());
 
