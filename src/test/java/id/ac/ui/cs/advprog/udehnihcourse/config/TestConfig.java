@@ -1,7 +1,7 @@
 package id.ac.ui.cs.advprog.udehnihcourse.config;
 
 import id.ac.ui.cs.advprog.udehnihcourse.clients.AuthServiceClient;
-import id.ac.ui.cs.advprog.udehnihcourse.security.JwtAuthenticationFilter;
+//import id.ac.ui.cs.advprog.udehnihcourse.security.JwtAuthenticationFilter;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
@@ -25,11 +25,11 @@ public class TestConfig {
         return mock(AuthServiceClient.class);
     }
 
-    @Bean
-    @Primary
-    public JwtAuthenticationFilter mockJwtAuthenticationFilter() {
-        return mock(JwtAuthenticationFilter.class);
-    }
+//    @Bean
+//    @Primary
+//    public JwtAuthenticationFilter mockJwtAuthenticationFilter() {
+//        return mock(JwtAuthenticationFilter.class);
+//    }
 
     @Bean
     @Primary
