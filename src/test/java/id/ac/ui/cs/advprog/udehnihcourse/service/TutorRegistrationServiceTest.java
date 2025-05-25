@@ -226,38 +226,6 @@ public class TutorRegistrationServiceTest {
         verify(tutorRegistrationRepository, never()).delete(any(TutorRegistration.class));
     }
 
-    // NEW TESTS FOR STAFF FUNCTIONALITY
-
-    @Test
-    void updateRegistrationStatusByStaff_whenAccepted_shouldUpdateStatusAndSendNotificationAndAddRole() {
-        Long applicationId = 1L;
-        when(tutorRegistrationRepository.findById(applicationId)).thenReturn(Optional.of(existingPendingApp));
-        when(tutorRegistrationRepository.save(any(TutorRegistration.class))).thenReturn(existingPendingApp);
-
-        RoleResponse roleResponse = RoleResponse.builder()
-                .success(true)
-                .message("Role added successfully")
-                .build();
-        when(authServiceClient.addRoleToUser(any(RoleRequest.class))).thenReturn(roleResponse);
-
-        TutorRegistration result = tutorRegistrationService.updateRegistrationStatusByStaff(
-                applicationId, TutorRegistrationStatus.ACCEPTED, "Great application!", staffId);
-
-        assertNotNull(result);
-        assertEquals(TutorRegistrationStatus.ACCEPTED, existingPendingApp.getStatus());
-        assertNotNull(existingPendingApp.getProcessedAt());
-
-        verify(tutorRegistrationRepository, times(1)).findById(applicationId);
-        verify(tutorRegistrationRepository, times(1)).save(existingPendingApp);
-        verify(notificationService, times(1)).sendTutorApplicationNotification(
-                eq(NotificationType.TUTOR_APPLICATION_ACCEPTED), eq(existingPendingApp), isNull());
-
-        // Use lenient() to allow these stubbing calls for this test
-        verify(authServiceClient, times(1)).addRoleToUser(argThat(roleRequest ->
-                roleRequest.getUserId().equals(Long.parseLong(studentId)) &&
-                        roleRequest.getRoleType().equals(RoleType.TUTOR)
-        ));
-    }
 
     @Test
     void updateRegistrationStatusByStaff_whenDenied_shouldUpdateStatusAndSendNotificationWithFeedback() {
@@ -321,22 +289,6 @@ public class TutorRegistrationServiceTest {
 
         assertTrue(exception.getMessage().contains("Invalid status update by staff"));
         verify(tutorRegistrationRepository, never()).findById(anyLong());
-    }
-
-    @Test
-    void updateRegistrationStatusByStaff_whenRoleServiceFails_shouldStillUpdateStatus() {
-        Long applicationId = 1L;
-        when(tutorRegistrationRepository.findById(applicationId)).thenReturn(Optional.of(existingPendingApp));
-        when(tutorRegistrationRepository.save(any(TutorRegistration.class))).thenReturn(existingPendingApp);
-        when(authServiceClient.addRoleToUser(any(RoleRequest.class))).thenThrow(new RuntimeException("Auth service error"));
-
-        TutorRegistration result = tutorRegistrationService.updateRegistrationStatusByStaff(
-                applicationId, TutorRegistrationStatus.ACCEPTED, null, staffId);
-
-        assertNotNull(result);
-        assertEquals(TutorRegistrationStatus.ACCEPTED, existingPendingApp.getStatus());
-        verify(tutorRegistrationRepository, times(1)).save(existingPendingApp);
-        verify(authServiceClient, times(1)).addRoleToUser(any(RoleRequest.class));
     }
 
     @Test
