@@ -4,10 +4,14 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.TestPropertySource;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 @TestPropertySource(properties = {
+        "SERVER_PORT=8081",
+        "payment.service.baseurl=http://localhost:8082",
+        "PAYMENT_SERVICE_API_KEY=test-api-key-for-testing",
         "services.auth.baseurl=http://localhost:8080",
         "services.payment.baseurl=http://localhost:8081",
         "services.payment.api-key=test-api-key",

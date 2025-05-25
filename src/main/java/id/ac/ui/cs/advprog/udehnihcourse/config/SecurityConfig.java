@@ -1,6 +1,7 @@
 package id.ac.ui.cs.advprog.udehnihcourse.config;
 
 import id.ac.ui.cs.advprog.udehnihcourse.security.JwtAuthenticationFilter;
+import id.ac.ui.cs.advprog.udehnihcourse.security.PaymentApiKeyAuthFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -31,6 +32,7 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final CorsConfigurationSource corsConfigurationSource;
+    private final PaymentApiKeyAuthFilter paymentApiKeyAuthFilter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -125,11 +127,37 @@ public class SecurityConfig {
                                 .requestMatchers("/error")
                                 .permitAll()
 
+                                // ===== Course Browsing and Enrollment =====
+                                .requestMatchers(HttpMethod.POST,
+                                        "/api/enrollment")
+                                .authenticated()
+
+                                .requestMatchers(HttpMethod.GET,
+                                        "/api/enrollment")
+                                .authenticated()
+
+                                .requestMatchers(HttpMethod.GET,
+                                        "/api/courses/{courseId}/content")
+                                .authenticated()
+
+                                .requestMatchers(HttpMethod.GET,
+                                        "/{courseId}/sections/{sectionId}")
+                                .authenticated()
+
+                                .requestMatchers(HttpMethod.GET,
+                                        "/{courseId}/sections/{sectionId}/articles/{articleId}")
+                                .authenticated()
+
+                                .requestMatchers(HttpMethod.POST,
+                                        "/api/enrollment/payment-callback")
+                                .hasRole("API_CLIENT")
 
                                 .anyRequest().authenticated()
                 );
 
-        http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+        http
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(paymentApiKeyAuthFilter, JwtAuthenticationFilter.class);
         return http.build();
     }
 }
