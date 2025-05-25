@@ -5,6 +5,7 @@ import id.ac.ui.cs.advprog.udehnihcourse.exception.ArticleNotFoundException;
 import id.ac.ui.cs.advprog.udehnihcourse.exception.CourseNotFoundException;
 import id.ac.ui.cs.advprog.udehnihcourse.exception.SectionNotFoundException;
 import id.ac.ui.cs.advprog.udehnihcourse.exception.UnauthorizedAccessException;
+import id.ac.ui.cs.advprog.udehnihcourse.model.EnrollmentStatus;
 import id.ac.ui.cs.advprog.udehnihcourse.repository.EnrollmentRepository;
 import org.springframework.stereotype.Service;
 
@@ -172,6 +173,7 @@ public class CourseBrowsingService {
     }
 
     private boolean isEnrolled(Long studentId, Long courseId) {
-        return enrollmentRepository.existsByStudentIdAndCourseId(studentId, courseId);
+        
+        return enrollmentRepository.existsByStudentIdAndCourseIdAndStatusEquals(studentId, courseId, EnrollmentStatus.ENROLLED.name());
     }
 }
