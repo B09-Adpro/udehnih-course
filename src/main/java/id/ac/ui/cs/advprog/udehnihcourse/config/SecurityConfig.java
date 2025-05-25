@@ -136,6 +136,10 @@ public class SecurityConfig {
                                         "/{courseId}/sections/{sectionId}/articles/{articleId}")
                                 .authenticated()
 
+                                .requestMatchers(HttpMethod.POST,
+                                        "/api/enrollment/payment-callback")
+                                .hasRole("API_CLIENT")
+
                                 .anyRequest().authenticated()
                 );
 
