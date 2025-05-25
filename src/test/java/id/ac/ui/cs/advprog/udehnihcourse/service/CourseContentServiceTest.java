@@ -288,19 +288,22 @@ class CourseContentServiceTest {
     }
 
     @Test
-    void deleteSection_whenPublishedCourseWithOnlyOneSection_shouldThrowBadRequest() {
+    void deleteSection_whenPublishedCourseHasOnlyOneSection_shouldThrowBadRequest() {
         when(courseRepository.findById(courseId)).thenReturn(Optional.of(publishedCourse));
         doNothing().when(courseManagementService).verifyCourseOwnership(publishedCourse, tutorId);
         doNothing().when(courseManagementService).verifyCourseIsModifiable(publishedCourse);
-        when(sectionRepository.findByIdAndCourseId(sectionId, courseId)).thenReturn(Optional.of(section));
+
         when(sectionRepository.countByCourseId(courseId)).thenReturn(1L);
 
         ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> {
             courseContentService.deleteSection(courseId, sectionId, tutorId);
         });
+
         assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
         assertTrue(ex.getReason().contains("Cannot delete the last section"));
+
         verify(sectionRepository, never()).delete(any(Section.class));
+        verify(sectionRepository, times(1)).countByCourseId(courseId);
     }
 
     @Test
@@ -520,15 +523,17 @@ class CourseContentServiceTest {
         when(sectionRepository.findById(sectionId)).thenReturn(Optional.of(publishedSection));
         doNothing().when(courseManagementService).verifyCourseOwnership(publishedCourse, tutorId);
         doNothing().when(courseManagementService).verifyCourseIsModifiable(publishedCourse);
-        when(articleRepository.findByIdAndSectionId(articleId, sectionId)).thenReturn(Optional.of(article));
         when(articleRepository.countBySectionId(sectionId)).thenReturn(1L);
 
         ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> {
             courseContentService.deleteArticle(sectionId, articleId, tutorId);
         });
+
         assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
         assertTrue(ex.getReason().contains("Cannot delete the last article"));
         verify(articleRepository, never()).delete(any(Article.class));
+        verify(articleRepository, times(1)).countBySectionId(sectionId);
+        verify(articleRepository, never()).findByIdAndSectionId(anyLong(), anyLong());
     }
 
     @Test
