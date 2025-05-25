@@ -2,7 +2,9 @@ package id.ac.ui.cs.advprog.udehnihcourse.controller;
 
 import id.ac.ui.cs.advprog.udehnihcourse.dto.coursebrowsing.ArticleDTO;
 import id.ac.ui.cs.advprog.udehnihcourse.dto.coursebrowsing.SectionDTO;
+import id.ac.ui.cs.advprog.udehnihcourse.security.AppUserDetails;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import id.ac.ui.cs.advprog.udehnihcourse.dto.coursebrowsing.CourseListDTO;
@@ -32,7 +34,7 @@ public class CourseManagementController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/search")
+    @GetMapping("search")
     public ResponseEntity<Map<String, List<CourseListDTO>>> searchCourses(@RequestParam String keyword) {
         List<CourseListDTO> courses = courseBrowsingService.searchCourses(keyword);
 
@@ -42,17 +44,17 @@ public class CourseManagementController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/{courseId}")
+    @GetMapping("{courseId}")
     public ResponseEntity<CourseDetailDTO> getCourseById(@PathVariable Long courseId) {
         CourseDetailDTO course = courseBrowsingService.getCourseById(courseId, null);
         return ResponseEntity.ok(course);
     }
 
-    @GetMapping("/{courseId}/content")
+    @GetMapping("{courseId}/content")
     public ResponseEntity<CourseDetailDTO> getCourseContent(
-            @RequestHeader("Authorization") String token,
-            @PathVariable Long courseId) {
-        Long studentId = extractStudentIdFromToken(token);
+            @PathVariable Long courseId,
+            @AuthenticationPrincipal AppUserDetails userDetails) {
+        Long studentId = userDetails.getId();
         if (studentId == null) {
             throw new RuntimeException("Invalid authentication token");
         }
@@ -60,13 +62,13 @@ public class CourseManagementController {
         return ResponseEntity.ok(course);
     }
 
-    @GetMapping("/{courseId}/sections/{sectionId}")
+    @GetMapping("{courseId}/sections/{sectionId}")
     public ResponseEntity<SectionDTO> getSectionContent(
-            @RequestHeader("Authorization") String token,
             @PathVariable Long courseId,
-            @PathVariable Long sectionId) {
+            @PathVariable Long sectionId,
+            @AuthenticationPrincipal AppUserDetails userDetails) {
 
-        Long studentId = extractStudentIdFromToken(token);
+        Long studentId = userDetails.getId();
         if (studentId == null) {
             throw new RuntimeException("Invalid authentication token");
         }
@@ -75,28 +77,19 @@ public class CourseManagementController {
         return ResponseEntity.ok(section);
     }
 
-    @GetMapping("/{courseId}/sections/{sectionId}/articles/{articleId}")
+    @GetMapping("{courseId}/sections/{sectionId}/articles/{articleId}")
     public ResponseEntity<ArticleDTO> getArticleContent(
-            @RequestHeader("Authorization") String token,
             @PathVariable Long courseId,
             @PathVariable Long sectionId,
-            @PathVariable Long articleId) {
+            @PathVariable Long articleId,
+            @AuthenticationPrincipal AppUserDetails userDetails) {
 
-        Long studentId = extractStudentIdFromToken(token);
+        Long studentId = userDetails.getId();
         if (studentId == null) {
             throw new RuntimeException("Invalid authentication token");
         }
 
         ArticleDTO article = courseBrowsingService.getArticleById(courseId, articleId, studentId);
         return ResponseEntity.ok(article);
-    }
-
-    // TODO : Implement JWT Token Auth
-    private Long extractStudentIdFromToken(String token) {
-        if (token != null && token.startsWith("Bearer ")) {
-            token = token.substring(7);
-        }
-        // Placeholder: returning a dummy Long ID instead of String
-        return 12345L;
     }
 }
