@@ -64,7 +64,7 @@ jobs:
             -e SHOW_SQL=${{ secrets.SHOW_SQL }} \
             -e SONAR_PROJECT_KEY=${{ secrets.SONAR_PROJECT_KEY }} \
             -e SONAR_ORGANIZATION=${{ secrets.SONAR_ORGANIZATION }} \
-            -e AUTH_SERVICE_URL=${{ secrets.AUTH_SERVICE_URL }} \
+            -e AUTH_SERVICE_URL_LOCAL=${{ secrets.AUTH_SERVICE_URL_LOCAL }} \
             -e ALLOWED_ORIGINS='*' \
             -e ALLOWED_METHODS='GET,POST,PUT,DELETE,OPTIONS' \
             -e ALLOWED_HEADERS='*' \
