@@ -24,6 +24,12 @@ public class PaymentRequestDTO {
     @NotNull(message = "Course ID is required")
     private Long courseId;
 
+    @NotNull(message = "Course title is required")
+    private String courseTitle;
+
+    @NotNull(message = "Tutor name is required")
+    private String tutorName;
+
     @NotNull(message = "Amount is required")
     @Positive(message = "Amount must be positive")
     private BigDecimal amount;
