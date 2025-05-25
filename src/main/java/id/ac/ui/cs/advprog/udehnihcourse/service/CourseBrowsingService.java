@@ -1,12 +1,11 @@
 package id.ac.ui.cs.advprog.udehnihcourse.service;
 
+import id.ac.ui.cs.advprog.udehnihcourse.clients.AuthServiceClient;
 import id.ac.ui.cs.advprog.udehnihcourse.exception.ArticleNotFoundException;
 import id.ac.ui.cs.advprog.udehnihcourse.exception.CourseNotFoundException;
 import id.ac.ui.cs.advprog.udehnihcourse.exception.SectionNotFoundException;
 import id.ac.ui.cs.advprog.udehnihcourse.exception.UnauthorizedAccessException;
 import id.ac.ui.cs.advprog.udehnihcourse.repository.EnrollmentRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import id.ac.ui.cs.advprog.udehnihcourse.model.Article;
@@ -30,9 +29,9 @@ import java.util.concurrent.atomic.AtomicLong;
 @RequiredArgsConstructor
 @Transactional
 public class CourseBrowsingService {
-    @Autowired
-    private CourseRepository courseRepository;
-    private EnrollmentRepository enrollmentRepository;
+    private final CourseRepository courseRepository;
+    private final EnrollmentRepository enrollmentRepository;
+    private final AuthServiceClient authServiceClient;
     
     public List<CourseListDTO> getAllCourses() {
         List<Course> courses = courseRepository.findAll();
@@ -43,6 +42,7 @@ public class CourseBrowsingService {
 
     public List<CourseListDTO> searchCourses(String keyword) {
         List<Course> courses = courseRepository.findByTitleContainingIgnoreCase(keyword);
+
         return courses.stream()
             .map(this::convertToDto)
             .toList();
@@ -52,12 +52,12 @@ public class CourseBrowsingService {
         Course course = courseRepository.findById(id).orElseThrow(() -> new CourseNotFoundException("Course not found"));
 
         boolean isEnrolled = isEnrolled(studentId, id);
-
+        String tutorName = authServiceClient.getUserInfoById(course.getTutorId()).getName();
         return CourseDetailDTO.builder()
             .id(course.getId())
             .title(course.getTitle())
             .category(course.getCategory())
-            .instructor(getTutorName(course.getTutorId()))
+            .instructor(tutorName)
             .price(course.getPrice())
             .is_free(isFree(course))
             .description(course.getDescription())
@@ -68,22 +68,18 @@ public class CourseBrowsingService {
     }
 
     public SectionDTO getSectionById(Long courseId, Long sectionId, Long studentId) {
-        // Verify course exists
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new CourseNotFoundException("Course not found"));
 
-        // Check enrollment
         if (!isEnrolled(studentId, courseId)) {
             throw new UnauthorizedAccessException("Student is not enrolled in this course");
         }
 
-        // Find the section in the course
         Section section = course.getSections().stream()
                 .filter(s -> s.getId().equals(sectionId))
                 .findFirst()
                 .orElseThrow(() -> new SectionNotFoundException("Section not found in this course"));
 
-        // Calculate section order within course
         AtomicLong sectionOrder = new AtomicLong(1);
         for (Section s : course.getSections()) {
             if (s.getId().equals(sectionId)) {
@@ -111,7 +107,6 @@ public class CourseBrowsingService {
             if (articleOpt.isPresent()) {
                 Article article = articleOpt.get();
 
-                // Calculate article order within section
                 AtomicLong counter = new AtomicLong(1);
                 for (Article a : section.getArticles()) {
                     if (a.getId().equals(articleId)) {
@@ -128,11 +123,12 @@ public class CourseBrowsingService {
     }
 
     private CourseListDTO convertToDto(Course course) {
+        String tutorName = authServiceClient.getUserInfoById(course.getTutorId()).getName();
         CourseListDTO dto = CourseListDTO.builder()
             .id(course.getId())
             .title(course.getTitle())
             .category(course.getCategory())
-            .instructor(getTutorName(course.getTutorId()))
+            .instructor(tutorName)
             .price(course.getPrice())
             .build();
         return dto; 
@@ -177,11 +173,5 @@ public class CourseBrowsingService {
 
     private boolean isEnrolled(Long studentId, Long courseId) {
         return enrollmentRepository.existsByStudentIdAndCourseId(studentId, courseId);
-    }
-
-    // TODO : Implement this method to fetch the tutor name based on the tutorId
-    private String getTutorName(String tutorId) {
-        // Place Holder for actual implementation
-        return "Tutor Name";
     }
 }
