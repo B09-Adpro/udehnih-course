@@ -7,11 +7,13 @@ import id.ac.ui.cs.advprog.udehnihcourse.dto.GenericResponse;
 import id.ac.ui.cs.advprog.udehnihcourse.dto.course.*;
 import id.ac.ui.cs.advprog.udehnihcourse.model.CourseStatus;
 import id.ac.ui.cs.advprog.udehnihcourse.security.AppUserDetails;
+import id.ac.ui.cs.advprog.udehnihcourse.service.CourseBrowsingService;
 import id.ac.ui.cs.advprog.udehnihcourse.service.CourseManagementService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -44,6 +46,9 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 @ActiveProfiles("test")
 @Import({TestConfig.class, SecurityConfig.class})
 public class CourseManagementControllerTest {
+    @MockitoBean
+    private CourseBrowsingService courseBrowsingService;
+
     @Autowired
     private MockMvc mockMvc;
 

@@ -1,5 +1,8 @@
 package id.ac.ui.cs.advprog.udehnihcourse.service;
 
+import id.ac.ui.cs.advprog.udehnihcourse.clients.AuthServiceClient;
+import id.ac.ui.cs.advprog.udehnihcourse.clients.PaymentServiceClient;
+import id.ac.ui.cs.advprog.udehnihcourse.dto.auth.UserInfoResponse;
 import id.ac.ui.cs.advprog.udehnihcourse.dto.coursebrowsing.*;
 import id.ac.ui.cs.advprog.udehnihcourse.exception.*;
 import id.ac.ui.cs.advprog.udehnihcourse.model.*;
@@ -35,6 +38,12 @@ class CourseEnrollmentServiceTest {
     @Mock
     private RestTemplate restTemplate;
 
+    @Mock
+    private PaymentServiceClient paymentServiceClient;
+
+    @Mock
+    private AuthServiceClient authServiceClient;
+
     @InjectMocks
     private CourseEnrollmentService courseEnrollmentService;
 
@@ -44,8 +53,6 @@ class CourseEnrollmentServiceTest {
 
     @BeforeEach
     void setUp() {
-        ReflectionTestUtils.setField(courseEnrollmentService, "paymentServiceUrl", "http://localhost:8080");
-
         course = Course.builder()
                 .id(1L)
                 .title("Java Programming")
@@ -76,7 +83,7 @@ class CourseEnrollmentServiceTest {
     @Test
     void whenEnrollAlreadyEnrolledStudent_thenThrowException() {
         when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
-        when(enrollmentRepository.existsByStudentIdAndCourseId(101L, 1L)).thenReturn(true);
+        when(enrollmentRepository.existsByStudentIdAndCourseIdAndStatusEquals(101L, 1L, EnrollmentStatus.ENROLLED)).thenReturn(true);
 
         assertThrows(AlreadyEnrolledException.class, () ->
                 courseEnrollmentService.enrollStudentInCourse(101L, 1L, PAYMENT_METHOD));
@@ -87,7 +94,11 @@ class CourseEnrollmentServiceTest {
     @Test
     void whenPaymentFails_thenThrowException() {
         when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
-        when(enrollmentRepository.existsByStudentIdAndCourseId(101L, 1L)).thenReturn(false);
+        when(enrollmentRepository.existsByStudentIdAndCourseIdAndStatusEquals(101L, 1L, EnrollmentStatus.ENROLLED)).thenReturn(Boolean.FALSE);
+        when(paymentServiceClient.createPaymentRequest(any(PaymentRequestDTO.class)))
+                .thenReturn(new PaymentResponseDTO(false, "asda", "asda"));
+        when(authServiceClient.getUserInfoById(course.getTutorId()))
+                .thenReturn(new UserInfoResponse("1","tutor1", "Tutor Name"));
 
         PaymentResponseDTO paymentResponse = PaymentResponseDTO.builder()
                 .success(false)
@@ -104,6 +115,9 @@ class CourseEnrollmentServiceTest {
     void whenGetStudentEnrollments_thenReturnList() {
         List<Enrollment> enrollments = Arrays.asList(enrollment);
         when(enrollmentRepository.findByStudentId(101L)).thenReturn(enrollments);
+        when(authServiceClient.getUserInfoById(course.getTutorId()))
+                .thenReturn(new UserInfoResponse("1","tutor1", "Tutor Name"));
+
 
         List<EnrolledCourseDTO> results = courseEnrollmentService.getStudentEnrollments(101L);
 

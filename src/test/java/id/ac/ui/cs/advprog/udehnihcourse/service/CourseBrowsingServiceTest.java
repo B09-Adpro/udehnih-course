@@ -1,11 +1,14 @@
 package id.ac.ui.cs.advprog.udehnihcourse.service;
 
+import static java.lang.Boolean.FALSE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
+import id.ac.ui.cs.advprog.udehnihcourse.clients.AuthServiceClient;
+import id.ac.ui.cs.advprog.udehnihcourse.dto.auth.UserInfoResponse;
 import id.ac.ui.cs.advprog.udehnihcourse.dto.coursebrowsing.ArticleDTO;
 import id.ac.ui.cs.advprog.udehnihcourse.dto.coursebrowsing.SectionDTO;
-import id.ac.ui.cs.advprog.udehnihcourse.model.Enrollment;
+import id.ac.ui.cs.advprog.udehnihcourse.model.*;
 import id.ac.ui.cs.advprog.udehnihcourse.repository.EnrollmentRepository;
 import id.ac.ui.cs.advprog.udehnihcourse.repository.SectionRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,9 +19,6 @@ import org.mockito.MockitoAnnotations;
 
 import id.ac.ui.cs.advprog.udehnihcourse.dto.coursebrowsing.CourseDetailDTO;
 import id.ac.ui.cs.advprog.udehnihcourse.dto.coursebrowsing.CourseListDTO;
-import id.ac.ui.cs.advprog.udehnihcourse.model.Article;
-import id.ac.ui.cs.advprog.udehnihcourse.model.Course;
-import id.ac.ui.cs.advprog.udehnihcourse.model.Section;
 import id.ac.ui.cs.advprog.udehnihcourse.repository.CourseRepository;
 
 import java.math.BigDecimal;
@@ -33,6 +33,9 @@ public class CourseBrowsingServiceTest {
 
     @Mock
     private EnrollmentRepository enrollmentRepository;
+
+    @Mock
+    private AuthServiceClient authServiceClient;
 
     @InjectMocks
     private CourseBrowsingService courseBrowsingService;
@@ -70,6 +73,7 @@ public class CourseBrowsingServiceTest {
     @Test
     void testGetAllCourses() {
         when(courseRepository.findAll()).thenReturn(List.of(course));
+        when(authServiceClient.getUserInfoById("tutor-1")).thenReturn(new UserInfoResponse("1","tutor-1", "Tutor Name"));
 
         List<CourseListDTO> courses = courseBrowsingService.getAllCourses();
 
@@ -81,6 +85,7 @@ public class CourseBrowsingServiceTest {
     @Test
     void testSearchCourses() {
         when(courseRepository.findByTitleContainingIgnoreCase("java")).thenReturn(List.of(course));
+        when(authServiceClient.getUserInfoById("tutor-1")).thenReturn(new UserInfoResponse("1", "tutor-1", "Tutor Name"));
 
         List<CourseListDTO> courses = courseBrowsingService.searchCourses("java");
 
@@ -93,7 +98,8 @@ public class CourseBrowsingServiceTest {
     void testGetCourseById() {
         // Setup
         when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
-        when(enrollmentRepository.existsByStudentIdAndCourseId(101L, 1L)).thenReturn(true);
+        when(enrollmentRepository.existsByStudentIdAndCourseIdAndStatusEquals(101L, 1L, EnrollmentStatus.ENROLLED)).thenReturn(true);
+        when(authServiceClient.getUserInfoById("tutor-1")).thenReturn(new UserInfoResponse("1", "tutor-1", "Tutor Name"));
 
         // Execute
         CourseDetailDTO courseDetail = courseBrowsingService.getCourseById(1L, 101L);
@@ -111,7 +117,7 @@ public class CourseBrowsingServiceTest {
     void testGetSectionById_whenStudentIsEnrolled_returnsSectionDTO() {
         // Setup
         when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
-        when(enrollmentRepository.existsByStudentIdAndCourseId(101L, 1L)).thenReturn(true);
+        when(enrollmentRepository.existsByStudentIdAndCourseIdAndStatusEquals(101L, 1L, EnrollmentStatus.ENROLLED)).thenReturn(true);
 
         // Execute
         SectionDTO sectionDTO = courseBrowsingService.getSectionById(1L, 1L, 101L);
@@ -143,7 +149,7 @@ public class CourseBrowsingServiceTest {
     void testGetSectionById_whenSectionNotFound_throwsException() {
         // Setup
         when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
-        when(enrollmentRepository.existsByStudentIdAndCourseId(101L, 1L)).thenReturn(true);
+        when(enrollmentRepository.existsByStudentIdAndCourseIdAndStatusEquals(101L, 1L, EnrollmentStatus.ENROLLED)).thenReturn(true);
 
         // Execute and verify
         RuntimeException exception = org.junit.jupiter.api.Assertions.assertThrows(
@@ -158,7 +164,7 @@ public class CourseBrowsingServiceTest {
     void testGetArticleById_whenStudentIsEnrolled_returnsArticleDTO() {
         // Setup
         when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
-        when(enrollmentRepository.existsByStudentIdAndCourseId(101L, 1L)).thenReturn(true);
+        when(enrollmentRepository.existsByStudentIdAndCourseIdAndStatusEquals(101L, 1L, EnrollmentStatus.ENROLLED)).thenReturn(true);
 
         // Execute
         ArticleDTO articleDTO = courseBrowsingService.getArticleById(1L, 1L, 101L);
@@ -174,7 +180,7 @@ public class CourseBrowsingServiceTest {
     void testGetArticleById_whenStudentIsNotEnrolled_throwsException() {
         // Setup
         when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
-        when(enrollmentRepository.existsByStudentIdAndCourseId(101L, 1L)).thenReturn(false);
+        when(enrollmentRepository.existsByStudentIdAndCourseIdAndStatusEquals(101L, 1L, EnrollmentStatus.ENROLLED)).thenReturn(FALSE);
 
         // Execute and verify
         RuntimeException exception = org.junit.jupiter.api.Assertions.assertThrows(
@@ -189,7 +195,7 @@ public class CourseBrowsingServiceTest {
     void testGetArticleById_whenArticleNotFound_throwsException() {
         // Setup
         when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
-        when(enrollmentRepository.existsByStudentIdAndCourseId(101L, 1L)).thenReturn(true);
+        when(enrollmentRepository.existsByStudentIdAndCourseIdAndStatusEquals(101L, 1L, EnrollmentStatus.ENROLLED)).thenReturn(true);
 
         // Execute and verify
         RuntimeException exception = org.junit.jupiter.api.Assertions.assertThrows(
@@ -230,7 +236,7 @@ public class CourseBrowsingServiceTest {
                 .build();
 
         when(courseRepository.findById(1L)).thenReturn(Optional.of(courseWithMultipleArticles));
-        when(enrollmentRepository.existsByStudentIdAndCourseId(101L, 1L)).thenReturn(true);
+        when(enrollmentRepository.existsByStudentIdAndCourseIdAndStatusEquals(101L, 1L, EnrollmentStatus.ENROLLED)).thenReturn(true);
 
         // Execute
         ArticleDTO article1DTO = courseBrowsingService.getArticleById(1L, 1L, 101L);

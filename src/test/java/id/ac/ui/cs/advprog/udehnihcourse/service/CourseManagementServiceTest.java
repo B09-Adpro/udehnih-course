@@ -648,7 +648,7 @@ public class CourseManagementServiceTest {
 
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
 
-        assertTrue(exception.getReason().contains("Only courses in DRAFT or REJECTED status"));
+        assertTrue(exception.getReason().contains("must have at least one article to be submitted"));
         verify(courseRepository, never()).save(any(Course.class));
     }
 }

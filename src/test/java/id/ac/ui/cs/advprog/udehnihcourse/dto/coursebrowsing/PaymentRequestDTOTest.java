@@ -12,12 +12,15 @@ class PaymentRequestDTOTest {
         Long enrollmentId = 5L;
         Long studentId = 1L;
         Long courseId = 2L;
+        String courseTitle = "Java Programming";
+        String tutorName = "John Doe";
         BigDecimal amount = new BigDecimal("199.99");
         Long timestamp = System.currentTimeMillis();
         String paymentMethod = "BANK_TRANSFER";
 
         // Act
-        PaymentRequestDTO dto = new PaymentRequestDTO(enrollmentId, studentId, courseId, amount, paymentMethod, timestamp);
+        PaymentRequestDTO dto = new PaymentRequestDTO(enrollmentId, studentId, courseId,
+                courseTitle, tutorName, amount, paymentMethod, timestamp);
 
         // Assert
         assertEquals(enrollmentId, dto.getEnrollmentId());
@@ -34,6 +37,8 @@ class PaymentRequestDTOTest {
         Long enrollmentId = 5L;
         Long studentId = 1L;
         Long courseId = 2L;
+        String courseTitle = "Java Programming";
+        String tutorName = "John Doe";
         BigDecimal amount = new BigDecimal("199.99");
         String paymentMethod = "CREDIT_CARD";
         Long timestamp = System.currentTimeMillis();
@@ -43,6 +48,8 @@ class PaymentRequestDTOTest {
                 .enrollmentId(enrollmentId)
                 .studentId(studentId)
                 .courseId(courseId)
+                .courseTitle(courseTitle)
+                .tutorName(tutorName)
                 .amount(amount)
                 .paymentMethod(paymentMethod)
                 .timestamp(timestamp)
@@ -64,6 +71,8 @@ class PaymentRequestDTOTest {
         Long enrollmentId = 5L;
         Long studentId = 1L;
         Long courseId = 2L;
+        String courseTitle = "Java Programming";
+        String tutorName = "John Doe";
         BigDecimal amount = new BigDecimal("199.99");
         String paymentMethod = "BANK_TRANSFER";
         Long timestamp = System.currentTimeMillis();
@@ -72,6 +81,8 @@ class PaymentRequestDTOTest {
         dto.setEnrollmentId(enrollmentId);
         dto.setStudentId(studentId);
         dto.setCourseId(courseId);
+        dto.setCourseTitle(courseTitle);
+        dto.setTutorName(tutorName);
         dto.setAmount(amount);
         dto.setPaymentMethod(paymentMethod);
         dto.setTimestamp(timestamp);
@@ -92,6 +103,8 @@ class PaymentRequestDTOTest {
                 .enrollmentId(5L)
                 .studentId(1L)
                 .courseId(2L)
+                .courseTitle("Java Programming")
+                .tutorName("John Doe")
                 .amount(new BigDecimal("199.99"))
                 .paymentMethod("CREDIT_CARD")
                 .timestamp(1000L)
@@ -101,6 +114,8 @@ class PaymentRequestDTOTest {
                 .enrollmentId(5L)
                 .studentId(1L)
                 .courseId(2L)
+                .courseTitle("Java Programming")
+                .tutorName("John Doe")
                 .amount(new BigDecimal("199.99"))
                 .paymentMethod("CREDIT_CARD")
                 .timestamp(1000L)

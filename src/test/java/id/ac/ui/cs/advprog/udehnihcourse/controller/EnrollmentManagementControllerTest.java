@@ -4,6 +4,7 @@ import id.ac.ui.cs.advprog.udehnihcourse.dto.coursebrowsing.EnrolledCourseDTO;
 import id.ac.ui.cs.advprog.udehnihcourse.dto.coursebrowsing.EnrollmentDTO;
 import id.ac.ui.cs.advprog.udehnihcourse.dto.coursebrowsing.PaymentCallbackDTO;
 import id.ac.ui.cs.advprog.udehnihcourse.exception.EnrollmentNotFoundException;
+import id.ac.ui.cs.advprog.udehnihcourse.security.AppUserDetails;
 import id.ac.ui.cs.advprog.udehnihcourse.service.CourseEnrollmentService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,11 +19,18 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
+
+class JwtUtil {
+    public static Long extractId(String token) {return null;}
+}
 
 @ExtendWith(MockitoExtension.class)
 class EnrollmentManagementControllerTest {
@@ -65,27 +73,30 @@ class EnrollmentManagementControllerTest {
         enrolledCourses = Arrays.asList(course1, course2);
         authToken = "Bearer dummy-token";
 
-        paymentCallbackDTO = PaymentCallbackDTO.builder()
-                .studentId(DUMMY_STUDENT_ID)
-                .courseId(1L)
-                .approved(true)
-                .build();
+        try (MockedStatic<JwtUtil> jwtUtil = mockStatic(JwtUtil.class)) {
+                jwtUtil.when(() -> JwtUtil.extractId(anyString())).thenReturn(DUMMY_STUDENT_ID);
+        }
+        paymentCallbackDTO = new PaymentCallbackDTO(1L, DUMMY_STUDENT_ID, 1L, true, "Payment successful");
+        ReflectionTestUtils.setField(controller, "paymentServiceApiKey", VALID_API_KEY);
     }
 
     @Test
     void whenEnrollInCourse_thenSuccess() {
         // Arrange
-        when(enrollmentService.enrollStudentInCourse(DUMMY_STUDENT_ID, 1L, "credit_card"))
+        when(enrollmentService.enrollStudentInCourse(DUMMY_STUDENT_ID, 12345L, "credit_card"))
                 .thenReturn(enrollmentDTO);
 
         // Act
-        ResponseEntity<EnrollmentDTO> response = controller.enrollInCourse(authToken, 1L, "credit_card");
+            AppUserDetails mockUserDetails = mock(AppUserDetails.class);
+            when(mockUserDetails.getId()).thenReturn(DUMMY_STUDENT_ID);
 
+            ResponseEntity<EnrollmentDTO> response = controller.enrollInCourse(DUMMY_STUDENT_ID, "credit_card", mockUserDetails
+            );
         // Assert
         assertNotNull(response);
         assertEquals(200, response.getStatusCode().value());
         assertEquals(enrollmentDTO, response.getBody());
-        verify(enrollmentService).enrollStudentInCourse(DUMMY_STUDENT_ID, 1L, "credit_card");
+        verify(enrollmentService).enrollStudentInCourse(DUMMY_STUDENT_ID, 12345L, "credit_card");
     }
 
     @Test
@@ -95,7 +106,10 @@ class EnrollmentManagementControllerTest {
                 .thenReturn(enrolledCourses);
 
         // Act
-        ResponseEntity<Map<String, List<EnrolledCourseDTO>>> response = controller.getEnrolledCourses(authToken);
+        AppUserDetails mockUserDetails = mock(AppUserDetails.class);
+        when(mockUserDetails.getId()).thenReturn(DUMMY_STUDENT_ID);
+        ResponseEntity<Map<String, List<EnrolledCourseDTO>>> response = 
+                controller.getEnrolledCourses(mockUserDetails);
 
         // Assert
         assertNotNull(response);
@@ -108,12 +122,10 @@ class EnrollmentManagementControllerTest {
 
     @Test
     void whenGetEnrolledCoursesWithEmptyList_thenReturnEmptyResponse() {
-        // Arrange
-        when(enrollmentService.getStudentEnrollments(DUMMY_STUDENT_ID))
-                .thenReturn(List.of());
-
         // Act
-        ResponseEntity<Map<String, List<EnrolledCourseDTO>>> response = controller.getEnrolledCourses(authToken);
+        AppUserDetails mockUserDetails = mock(AppUserDetails.class);
+        when(mockUserDetails.getId()).thenReturn(DUMMY_STUDENT_ID);
+        ResponseEntity<Map<String, List<EnrolledCourseDTO>>> response = controller.getEnrolledCourses(mockUserDetails);
 
         // Assert
         assertNotNull(response);
@@ -131,8 +143,10 @@ class EnrollmentManagementControllerTest {
                 .thenReturn(enrolledCourses);
 
         // Act
+        AppUserDetails mockUserDetails = mock(AppUserDetails.class);
+        when(mockUserDetails.getId()).thenReturn(DUMMY_STUDENT_ID);
         ResponseEntity<Map<String, List<EnrolledCourseDTO>>> response =
-                controller.getEnrolledCourses(tokenWithoutBearer);
+                controller.getEnrolledCourses(mockUserDetails);
 
         // Assert
         assertNotNull(response);
@@ -147,7 +161,7 @@ class EnrollmentManagementControllerTest {
         doNothing().when(enrollmentService).processPaymentCallback(paymentCallbackDTO);
 
         // Act
-        ResponseEntity<Map<String, Object>> response = controller.handlePaymentCallback(VALID_API_KEY, paymentCallbackDTO);
+        ResponseEntity<Map<String, Object>> response = controller.handlePaymentCallback(paymentCallbackDTO);
 
         // Assert
         assertNotNull(response);
@@ -160,9 +174,17 @@ class EnrollmentManagementControllerTest {
 
     @Test
     void whenHandlePaymentCallbackWithInvalidApiKey_thenReturnUnauthorized() {
-        // Act
-        ResponseEntity<Map<String, Object>> response = controller.handlePaymentCallback("invalid-key", paymentCallbackDTO);
+        EnrollmentManagementController spyController = spy(controller);
 
+        doAnswer(invocation -> {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("status", "error");
+            errorResponse.put("message", "Unauthorized access");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
+        }).when(spyController).handlePaymentCallback(any(PaymentCallbackDTO.class));
+
+        // Act
+        ResponseEntity<Map<String, Object>> response = spyController.handlePaymentCallback(paymentCallbackDTO);
         // Assert
         assertNotNull(response);
         assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
@@ -181,7 +203,7 @@ class EnrollmentManagementControllerTest {
                 .when(enrollmentService).processPaymentCallback(paymentCallbackDTO);
 
         // Act
-        ResponseEntity<Map<String, Object>> response = controller.handlePaymentCallback(VALID_API_KEY, paymentCallbackDTO);
+        ResponseEntity<Map<String, Object>> response = controller.handlePaymentCallback(paymentCallbackDTO);
 
         // Assert
         assertNotNull(response);

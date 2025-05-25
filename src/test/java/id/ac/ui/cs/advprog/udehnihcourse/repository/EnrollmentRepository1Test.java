@@ -3,6 +3,8 @@ package id.ac.ui.cs.advprog.udehnihcourse.repository;
 import id.ac.ui.cs.advprog.udehnihcourse.model.Course;
 import id.ac.ui.cs.advprog.udehnihcourse.model.Enrollment;
 import id.ac.ui.cs.advprog.udehnihcourse.model.EnrollmentStatus;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -16,13 +18,25 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 
 @DataJpaTest
-class EnrollmentRepositoryTest {
+class EnrollmentRepository1Test {
 
     @Autowired
     private TestEntityManager entityManager;
 
     @Autowired
     private EnrollmentRepository enrollmentRepository;
+
+    @BeforeAll
+    static void setup() {
+        System.setProperty("AUTH_SERVICE_URL_LOCAL", "http://localhost:8080");
+        System.setProperty("PAYMENT_SERVICE_URL_LOCAL", "http://localhost:8082");
+    }
+
+    @AfterAll
+    static void cleanup() {
+        System.clearProperty("AUTH_SERVICE_URL_LOCAL");
+        System.clearProperty("PAYMENT_SERVICE_URL_LOCAL");
+    }
 
     private Course createCourse(String title) {
         return Course.builder()
