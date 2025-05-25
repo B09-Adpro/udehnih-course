@@ -63,8 +63,8 @@ class CourseContentServiceTest {
 
     @BeforeEach
     void setUp() {
-        tutorId = "tutor-content-user";
-        studentId = "123";
+        tutorId = "123"; // Changed to numeric string to avoid NumberFormatException
+        studentId = "456"; // Changed to numeric string to avoid NumberFormatException
         courseId = 1L;
         sectionId = 10L;
         articleId = 100L;
@@ -210,27 +210,28 @@ class CourseContentServiceTest {
         assertEquals(1, responses.size());
         verify(courseRepository, times(1)).findById(courseId);
         verify(sectionRepository, times(1)).findByCourseId(courseId);
+        // Tutor owner should not need enrollment check
         verify(enrollmentRepository, never()).existsByCourseIdAndStudentIdAndStatus(any(), any(), any());
     }
 
     @Test
     void getSectionsByCourseForUser_whenEnrolledStudent_shouldReturnSections() {
         when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
-        when(enrollmentRepository.existsByCourseIdAndStudentIdAndStatus(courseId, 123L, EnrollmentStatus.ENROLLED)).thenReturn(true);
+        when(enrollmentRepository.existsByCourseIdAndStudentIdAndStatus(courseId, 456L, EnrollmentStatus.ENROLLED)).thenReturn(true);
         when(sectionRepository.findByCourseId(courseId)).thenReturn(Collections.singletonList(section));
 
         List<SectionResponse> responses = courseContentService.getSectionsByCourseForUser(courseId, studentId, studentAuthorities);
 
         assertNotNull(responses);
         assertEquals(1, responses.size());
-        verify(enrollmentRepository, times(1)).existsByCourseIdAndStudentIdAndStatus(courseId, 123L, EnrollmentStatus.ENROLLED);
+        verify(enrollmentRepository, times(1)).existsByCourseIdAndStudentIdAndStatus(courseId, 456L, EnrollmentStatus.ENROLLED);
         verify(sectionRepository, times(1)).findByCourseId(courseId);
     }
 
     @Test
     void getSectionsByCourseForUser_whenUnenrolledStudent_shouldThrowForbidden() {
         when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
-        when(enrollmentRepository.existsByCourseIdAndStudentIdAndStatus(courseId, 123L, EnrollmentStatus.ENROLLED)).thenReturn(false);
+        when(enrollmentRepository.existsByCourseIdAndStudentIdAndStatus(courseId, 456L, EnrollmentStatus.ENROLLED)).thenReturn(false);
 
         ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> {
             courseContentService.getSectionsByCourseForUser(courseId, studentId, studentAuthorities);
@@ -412,21 +413,21 @@ class CourseContentServiceTest {
     @Test
     void getArticlesBySectionForUser_whenEnrolledStudent_shouldReturnArticles() {
         when(sectionRepository.findById(sectionId)).thenReturn(Optional.of(section));
-        when(enrollmentRepository.existsByCourseIdAndStudentIdAndStatus(courseId, 123L, EnrollmentStatus.ENROLLED)).thenReturn(true);
+        when(enrollmentRepository.existsByCourseIdAndStudentIdAndStatus(courseId, 456L, EnrollmentStatus.ENROLLED)).thenReturn(true);
         when(articleRepository.findBySectionId(sectionId)).thenReturn(Collections.singletonList(article));
 
         List<ArticleResponse> responses = courseContentService.getArticlesBySectionForUser(sectionId, studentId, studentAuthorities);
 
         assertNotNull(responses);
         assertEquals(1, responses.size());
-        verify(enrollmentRepository, times(1)).existsByCourseIdAndStudentIdAndStatus(courseId, 123L, EnrollmentStatus.ENROLLED);
+        verify(enrollmentRepository, times(1)).existsByCourseIdAndStudentIdAndStatus(courseId, 456L, EnrollmentStatus.ENROLLED);
         verify(articleRepository, times(1)).findBySectionId(sectionId);
     }
 
     @Test
     void getArticlesBySectionForUser_whenUnenrolledStudent_shouldThrowForbidden() {
         when(sectionRepository.findById(sectionId)).thenReturn(Optional.of(section));
-        when(enrollmentRepository.existsByCourseIdAndStudentIdAndStatus(courseId, 123L, EnrollmentStatus.ENROLLED)).thenReturn(false);
+        when(enrollmentRepository.existsByCourseIdAndStudentIdAndStatus(courseId, 456L, EnrollmentStatus.ENROLLED)).thenReturn(false);
 
         ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> {
             courseContentService.getArticlesBySectionForUser(sectionId, studentId, studentAuthorities);
@@ -563,7 +564,7 @@ class CourseContentServiceTest {
     @Test
     void authorizeContentView_whenStudentButNotEnrolled_shouldThrowForbidden() {
         when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
-        when(enrollmentRepository.existsByCourseIdAndStudentIdAndStatus(courseId, 123L, EnrollmentStatus.ENROLLED)).thenReturn(false);
+        when(enrollmentRepository.existsByCourseIdAndStudentIdAndStatus(courseId, 456L, EnrollmentStatus.ENROLLED)).thenReturn(false);
 
         ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> {
             courseContentService.getSectionsByCourseForUser(courseId, studentId, studentAuthorities);
