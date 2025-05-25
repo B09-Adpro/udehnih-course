@@ -1,17 +1,22 @@
 package id.ac.ui.cs.advprog.udehnihcourse.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import id.ac.ui.cs.advprog.udehnihcourse.config.TestConfig;
 import id.ac.ui.cs.advprog.udehnihcourse.dto.GenericResponse;
 import id.ac.ui.cs.advprog.udehnihcourse.dto.article.ArticleRequest;
 import id.ac.ui.cs.advprog.udehnihcourse.dto.article.ArticleResponse;
 import id.ac.ui.cs.advprog.udehnihcourse.dto.section.SectionRequest;
 import id.ac.ui.cs.advprog.udehnihcourse.dto.section.SectionResponse;
 import id.ac.ui.cs.advprog.udehnihcourse.service.CourseContentService;
+import id.ac.ui.cs.advprog.udehnihcourse.security.AppUserDetails;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -31,6 +36,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(CourseContentController.class)
 @ActiveProfiles("test")
+@Import(TestConfig.class)
 class CourseContentControllerTest {
 
     @Autowired
@@ -39,14 +45,13 @@ class CourseContentControllerTest {
     @MockitoBean
     private CourseContentService courseContentService;
 
-    @Autowired
     private ObjectMapper objectMapper;
 
     private Long courseId = 1L;
     private Long sectionId = 10L;
     private Long articleId = 100L;
-    private String mockTutorId = "tutor-content-placeholder";
-    private String mockStudentId = "123";
+    private String mockTutorId = "123"; // Changed to match numeric format
+    private String mockStudentId = "456"; // Changed to match numeric format
 
     private SectionRequest sectionRequest;
     private SectionResponse sectionResponse;
@@ -55,6 +60,10 @@ class CourseContentControllerTest {
 
     @BeforeEach
     void setUp() {
+        // Initialize ObjectMapper manually to avoid null issues
+        this.objectMapper = new ObjectMapper();
+        this.objectMapper.registerModule(new JavaTimeModule());
+
         sectionRequest = new SectionRequest();
         sectionRequest.setTitle("New Section");
 
@@ -78,8 +87,19 @@ class CourseContentControllerTest {
                 .build();
     }
 
+    // Helper method to create AppUserDetails
+    private AppUserDetails createMockTutorDetails() {
+        return new AppUserDetails(123L, "tutor@example.com",
+                Collections.singletonList(new SimpleGrantedAuthority("ROLE_TUTOR")));
+    }
+
+    private AppUserDetails createMockStudentDetails() {
+        return new AppUserDetails(456L, "student@example.com",
+                Collections.singletonList(new SimpleGrantedAuthority("ROLE_STUDENT")));
+    }
+
     @Test
-    @WithMockUser(username = "tutor-content-placeholder", authorities = {"ROLE_TUTOR"})
+    @WithMockUser(username = "123", authorities = {"ROLE_TUTOR"})
     void addSection_whenValid_shouldReturnCreated() throws Exception {
         when(courseContentService.addSectionToCourse(eq(courseId), any(SectionRequest.class), eq(mockTutorId)))
                 .thenReturn(sectionResponse);
@@ -99,7 +119,7 @@ class CourseContentControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "tutor-content-placeholder", authorities = {"ROLE_TUTOR"})
+    @WithMockUser(username = "123", authorities = {"ROLE_TUTOR"})
     void addSection_whenCourseNotFound_shouldReturnNotFound() throws Exception {
         when(courseContentService.addSectionToCourse(eq(courseId), any(SectionRequest.class), eq(mockTutorId)))
                 .thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found"));
@@ -112,9 +132,9 @@ class CourseContentControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "other-tutor", authorities = {"ROLE_TUTOR"})
+    @WithMockUser(username = "999", authorities = {"ROLE_TUTOR"})
     void addSection_whenNotOwner_shouldReturnForbidden() throws Exception {
-        when(courseContentService.addSectionToCourse(eq(courseId), any(SectionRequest.class), eq("other-tutor")))
+        when(courseContentService.addSectionToCourse(eq(courseId), any(SectionRequest.class), eq("999")))
                 .thenThrow(new ResponseStatusException(HttpStatus.FORBIDDEN, "Not authorized"));
 
         mockMvc.perform(post("/api/courses/{courseId}/sections", courseId)
@@ -125,7 +145,7 @@ class CourseContentControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "tutor-content-placeholder", authorities = {"ROLE_TUTOR"})
+    @WithMockUser(username = "123", authorities = {"ROLE_TUTOR"})
     void addSection_whenCoursePendingReview_shouldReturnForbidden() throws Exception {
         when(courseContentService.addSectionToCourse(eq(courseId), any(SectionRequest.class), eq(mockTutorId)))
                 .thenThrow(new ResponseStatusException(HttpStatus.FORBIDDEN, "Course cannot be modified while PENDING_REVIEW"));
@@ -138,7 +158,7 @@ class CourseContentControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "student-user", authorities = {"ROLE_STUDENT"})
+    @WithMockUser(username = "456", authorities = {"ROLE_STUDENT"})
     void addSection_whenNotTutor_shouldReturnForbidden() throws Exception {
         mockMvc.perform(post("/api/courses/{courseId}/sections", courseId)
                         .with(csrf())
@@ -150,7 +170,7 @@ class CourseContentControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "tutor-content-placeholder", authorities = {"ROLE_TUTOR"})
+    @WithMockUser(username = "123", authorities = {"ROLE_TUTOR"})
     void addSection_whenInvalidRequest_shouldReturnBadRequest() throws Exception {
         SectionRequest invalidRequest = new SectionRequest();
         // Missing title
@@ -165,10 +185,10 @@ class CourseContentControllerTest {
     }
 
     @Test
-    @WithMockUser(username="student-user", authorities = {"ROLE_STUDENT"})
+    @WithMockUser(username = "456", authorities = {"ROLE_STUDENT"})
     void getSections_whenStudent_shouldReturnOk() throws Exception {
         List<SectionResponse> sectionList = Collections.singletonList(sectionResponse);
-        when(courseContentService.getSectionsByCourseForUser(eq(courseId), eq("student-user"), any()))
+        when(courseContentService.getSectionsByCourseForUser(eq(courseId), eq(mockStudentId), any()))
                 .thenReturn(sectionList);
 
         mockMvc.perform(get("/api/courses/{courseId}/sections", courseId)
@@ -179,11 +199,11 @@ class CourseContentControllerTest {
                 .andExpect(jsonPath("$[0].id").value(sectionId))
                 .andExpect(jsonPath("$[0].title").value("New Section"));
 
-        verify(courseContentService).getSectionsByCourseForUser(eq(courseId), eq("student-user"), any());
+        verify(courseContentService).getSectionsByCourseForUser(eq(courseId), eq(mockStudentId), any());
     }
 
     @Test
-    @WithMockUser(username = "tutor-content-placeholder", authorities = {"ROLE_TUTOR"})
+    @WithMockUser(username = "123", authorities = {"ROLE_TUTOR"})
     void getSections_whenTutor_shouldReturnOk() throws Exception {
         List<SectionResponse> sectionList = Collections.singletonList(sectionResponse);
         when(courseContentService.getSectionsByCourseForUser(eq(courseId), eq(mockTutorId), any()))
@@ -198,9 +218,9 @@ class CourseContentControllerTest {
     }
 
     @Test
-    @WithMockUser(username="student-user", authorities = {"ROLE_STUDENT"})
+    @WithMockUser(username = "456", authorities = {"ROLE_STUDENT"})
     void getSections_whenNotEnrolled_shouldReturnForbidden() throws Exception {
-        when(courseContentService.getSectionsByCourseForUser(eq(courseId), eq("student-user"), any()))
+        when(courseContentService.getSectionsByCourseForUser(eq(courseId), eq(mockStudentId), any()))
                 .thenThrow(new ResponseStatusException(HttpStatus.FORBIDDEN, "Not authorized to view content"));
 
         mockMvc.perform(get("/api/courses/{courseId}/sections", courseId)
@@ -218,7 +238,7 @@ class CourseContentControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "tutor-content-placeholder", authorities = {"ROLE_TUTOR"})
+    @WithMockUser(username = "123", authorities = {"ROLE_TUTOR"})
     void updateSection_whenValid_shouldReturnOk() throws Exception {
         when(courseContentService.updateSection(eq(courseId), eq(sectionId), any(SectionRequest.class), eq(mockTutorId)))
                 .thenReturn(sectionResponse);
@@ -236,7 +256,7 @@ class CourseContentControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "tutor-content-placeholder", authorities = {"ROLE_TUTOR"})
+    @WithMockUser(username = "123", authorities = {"ROLE_TUTOR"})
     void updateSection_whenSectionNotFound_shouldReturnNotFound() throws Exception {
         when(courseContentService.updateSection(eq(courseId), eq(sectionId), any(SectionRequest.class), eq(mockTutorId)))
                 .thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Section not found"));
@@ -249,7 +269,7 @@ class CourseContentControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "student-user", authorities = {"ROLE_STUDENT"})
+    @WithMockUser(username = "456", authorities = {"ROLE_STUDENT"})
     void updateSection_whenNotTutor_shouldReturnForbidden() throws Exception {
         mockMvc.perform(put("/api/courses/{courseId}/sections/{sectionId}", courseId, sectionId)
                         .with(csrf())
@@ -261,7 +281,7 @@ class CourseContentControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "tutor-content-placeholder", authorities = {"ROLE_TUTOR"})
+    @WithMockUser(username = "123", authorities = {"ROLE_TUTOR"})
     void deleteSection_whenValid_shouldReturnOk() throws Exception {
         doNothing().when(courseContentService).deleteSection(eq(courseId), eq(sectionId), eq(mockTutorId));
 
@@ -275,7 +295,7 @@ class CourseContentControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "tutor-content-placeholder", authorities = {"ROLE_TUTOR"})
+    @WithMockUser(username = "123", authorities = {"ROLE_TUTOR"})
     void deleteSection_whenLastSectionInPublishedCourse_shouldReturnBadRequest() throws Exception {
         doThrow(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot delete the last section"))
                 .when(courseContentService).deleteSection(eq(courseId), eq(sectionId), eq(mockTutorId));
@@ -286,7 +306,7 @@ class CourseContentControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "student-user", authorities = {"ROLE_STUDENT"})
+    @WithMockUser(username = "456", authorities = {"ROLE_STUDENT"})
     void deleteSection_whenNotTutor_shouldReturnForbidden() throws Exception {
         mockMvc.perform(delete("/api/courses/{courseId}/sections/{sectionId}", courseId, sectionId)
                         .with(csrf()))
@@ -298,7 +318,7 @@ class CourseContentControllerTest {
     // ARTICLE TESTS
 
     @Test
-    @WithMockUser(username = "tutor-content-placeholder", authorities = {"ROLE_TUTOR"})
+    @WithMockUser(username = "123", authorities = {"ROLE_TUTOR"})
     void addArticle_whenValid_shouldReturnCreated() throws Exception {
         when(courseContentService.addArticleToSection(eq(sectionId), any(ArticleRequest.class), eq(mockTutorId)))
                 .thenReturn(articleResponse);
@@ -317,7 +337,7 @@ class CourseContentControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "tutor-content-placeholder", authorities = {"ROLE_TUTOR"})
+    @WithMockUser(username = "123", authorities = {"ROLE_TUTOR"})
     void addArticle_whenSectionNotFound_shouldReturnNotFound() throws Exception {
         when(courseContentService.addArticleToSection(eq(sectionId), any(ArticleRequest.class), eq(mockTutorId)))
                 .thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Section not found"));
@@ -330,9 +350,9 @@ class CourseContentControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "other-tutor", authorities = {"ROLE_TUTOR"})
+    @WithMockUser(username = "999", authorities = {"ROLE_TUTOR"})
     void addArticle_whenNotOwner_shouldReturnForbidden() throws Exception {
-        when(courseContentService.addArticleToSection(eq(sectionId), any(ArticleRequest.class), eq("other-tutor")))
+        when(courseContentService.addArticleToSection(eq(sectionId), any(ArticleRequest.class), eq("999")))
                 .thenThrow(new ResponseStatusException(HttpStatus.FORBIDDEN, "Not authorized"));
 
         mockMvc.perform(post("/api/courses/{courseId}/sections/{sectionId}/articles", courseId, sectionId)
@@ -343,7 +363,7 @@ class CourseContentControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "student-user", authorities = {"ROLE_STUDENT"})
+    @WithMockUser(username = "456", authorities = {"ROLE_STUDENT"})
     void addArticle_whenNotTutor_shouldReturnForbidden() throws Exception {
         mockMvc.perform(post("/api/courses/{courseId}/sections/{sectionId}/articles", courseId, sectionId)
                         .with(csrf())
@@ -355,7 +375,7 @@ class CourseContentControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "tutor-content-placeholder", authorities = {"ROLE_TUTOR"})
+    @WithMockUser(username = "123", authorities = {"ROLE_TUTOR"})
     void addArticle_whenInvalidRequest_shouldReturnBadRequest() throws Exception {
         ArticleRequest invalidRequest = new ArticleRequest();
         // Missing required fields
@@ -370,10 +390,10 @@ class CourseContentControllerTest {
     }
 
     @Test
-    @WithMockUser(username="student-user", authorities = {"ROLE_STUDENT"})
+    @WithMockUser(username = "456", authorities = {"ROLE_STUDENT"})
     void getArticles_whenStudent_shouldReturnOk() throws Exception {
         List<ArticleResponse> articleList = Collections.singletonList(articleResponse);
-        when(courseContentService.getArticlesBySectionForUser(eq(sectionId), eq("student-user"), any()))
+        when(courseContentService.getArticlesBySectionForUser(eq(sectionId), eq(mockStudentId), any()))
                 .thenReturn(articleList);
 
         mockMvc.perform(get("/api/courses/{courseId}/sections/{sectionId}/articles", courseId, sectionId)
@@ -384,11 +404,11 @@ class CourseContentControllerTest {
                 .andExpect(jsonPath("$[0].id").value(articleId))
                 .andExpect(jsonPath("$[0].title").value("New Article"));
 
-        verify(courseContentService).getArticlesBySectionForUser(eq(sectionId), eq("student-user"), any());
+        verify(courseContentService).getArticlesBySectionForUser(eq(sectionId), eq(mockStudentId), any());
     }
 
     @Test
-    @WithMockUser(username = "tutor-content-placeholder", authorities = {"ROLE_TUTOR"})
+    @WithMockUser(username = "123", authorities = {"ROLE_TUTOR"})
     void getArticles_whenTutor_shouldReturnOk() throws Exception {
         List<ArticleResponse> articleList = Collections.singletonList(articleResponse);
         when(courseContentService.getArticlesBySectionForUser(eq(sectionId), eq(mockTutorId), any()))
@@ -403,9 +423,9 @@ class CourseContentControllerTest {
     }
 
     @Test
-    @WithMockUser(username="student-user", authorities = {"ROLE_STUDENT"})
+    @WithMockUser(username = "456", authorities = {"ROLE_STUDENT"})
     void getArticles_whenNotEnrolled_shouldReturnForbidden() throws Exception {
-        when(courseContentService.getArticlesBySectionForUser(eq(sectionId), eq("student-user"), any()))
+        when(courseContentService.getArticlesBySectionForUser(eq(sectionId), eq(mockStudentId), any()))
                 .thenThrow(new ResponseStatusException(HttpStatus.FORBIDDEN, "Not authorized to view content"));
 
         mockMvc.perform(get("/api/courses/{courseId}/sections/{sectionId}/articles", courseId, sectionId)
@@ -414,7 +434,7 @@ class CourseContentControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "tutor-content-placeholder", authorities = {"ROLE_TUTOR"})
+    @WithMockUser(username = "123", authorities = {"ROLE_TUTOR"})
     void updateArticle_whenValid_shouldReturnOk() throws Exception {
         when(courseContentService.updateArticle(eq(sectionId), eq(articleId), any(ArticleRequest.class), eq(mockTutorId)))
                 .thenReturn(articleResponse);
@@ -432,7 +452,7 @@ class CourseContentControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "tutor-content-placeholder", authorities = {"ROLE_TUTOR"})
+    @WithMockUser(username = "123", authorities = {"ROLE_TUTOR"})
     void updateArticle_whenArticleNotFound_shouldReturnNotFound() throws Exception {
         when(courseContentService.updateArticle(eq(sectionId), eq(articleId), any(ArticleRequest.class), eq(mockTutorId)))
                 .thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Article not found"));
@@ -445,7 +465,7 @@ class CourseContentControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "student-user", authorities = {"ROLE_STUDENT"})
+    @WithMockUser(username = "456", authorities = {"ROLE_STUDENT"})
     void updateArticle_whenNotTutor_shouldReturnForbidden() throws Exception {
         mockMvc.perform(put("/api/courses/{courseId}/sections/{sectionId}/articles/{articleId}", courseId, sectionId, articleId)
                         .with(csrf())
@@ -457,7 +477,7 @@ class CourseContentControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "tutor-content-placeholder", authorities = {"ROLE_TUTOR"})
+    @WithMockUser(username = "123", authorities = {"ROLE_TUTOR"})
     void deleteArticle_whenValid_shouldReturnOk() throws Exception {
         doNothing().when(courseContentService).deleteArticle(eq(sectionId), eq(articleId), eq(mockTutorId));
 
@@ -471,7 +491,7 @@ class CourseContentControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "tutor-content-placeholder", authorities = {"ROLE_TUTOR"})
+    @WithMockUser(username = "123", authorities = {"ROLE_TUTOR"})
     void deleteArticle_whenLastArticleInPublishedCourse_shouldReturnBadRequest() throws Exception {
         doThrow(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot delete the last article"))
                 .when(courseContentService).deleteArticle(eq(sectionId), eq(articleId), eq(mockTutorId));
@@ -482,7 +502,7 @@ class CourseContentControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "student-user", authorities = {"ROLE_STUDENT"})
+    @WithMockUser(username = "456", authorities = {"ROLE_STUDENT"})
     void deleteArticle_whenNotTutor_shouldReturnForbidden() throws Exception {
         mockMvc.perform(delete("/api/courses/{courseId}/sections/{sectionId}/articles/{articleId}", courseId, sectionId, articleId)
                         .with(csrf()))
@@ -494,7 +514,7 @@ class CourseContentControllerTest {
     // VALIDATION TESTS
 
     @Test
-    @WithMockUser(username = "tutor-content-placeholder", authorities = {"ROLE_TUTOR"})
+    @WithMockUser(username = "123", authorities = {"ROLE_TUTOR"})
     void addSection_whenTitleTooLong_shouldReturnBadRequest() throws Exception {
         SectionRequest invalidRequest = new SectionRequest();
         invalidRequest.setTitle("a".repeat(256)); // Exceeds max length
@@ -509,7 +529,7 @@ class CourseContentControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "tutor-content-placeholder", authorities = {"ROLE_TUTOR"})
+    @WithMockUser(username = "123", authorities = {"ROLE_TUTOR"})
     void addArticle_whenTitleTooLong_shouldReturnBadRequest() throws Exception {
         ArticleRequest invalidRequest = new ArticleRequest();
         invalidRequest.setTitle("a".repeat(256)); // Exceeds max length
@@ -526,7 +546,7 @@ class CourseContentControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "tutor-content-placeholder", authorities = {"ROLE_TUTOR"})
+    @WithMockUser(username = "123", authorities = {"ROLE_TUTOR"})
     void addArticle_whenContentTypeTooLong_shouldReturnBadRequest() throws Exception {
         ArticleRequest invalidRequest = new ArticleRequest();
         invalidRequest.setTitle("Valid title");
@@ -543,7 +563,7 @@ class CourseContentControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "tutor-content-placeholder", authorities = {"ROLE_TUTOR"})
+    @WithMockUser(username = "123", authorities = {"ROLE_TUTOR"})
     void addSection_whenMissingCsrfToken_shouldReturnForbidden() throws Exception {
         mockMvc.perform(post("/api/courses/{courseId}/sections", courseId)
                         // Missing .with(csrf())
