@@ -17,8 +17,10 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.H2Dialect
         format_sql: false
-  profiles:
-    active: test
+
+  h2:
+    console:
+      enabled: false
 
 jwt:
   secret-key: test-secret-key-for-testing-only-minimum-256-bits-long-for-hs512-algorithm
@@ -28,6 +30,9 @@ jwt:
 services:
   auth:
     baseurl: http://localhost:8080
+  payment:
+    baseurl: http://localhost:8081
+    api-key: test-api-key
 
 cors:
   allowed-origins: "*"
