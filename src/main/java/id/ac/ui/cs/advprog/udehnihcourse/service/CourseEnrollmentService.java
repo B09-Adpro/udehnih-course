@@ -1,18 +1,17 @@
 package id.ac.ui.cs.advprog.udehnihcourse.service;
 
+import id.ac.ui.cs.advprog.udehnihcourse.clients.PaymentServiceClient;
+import id.ac.ui.cs.advprog.udehnihcourse.clients.AuthServiceClient;
 import id.ac.ui.cs.advprog.udehnihcourse.exception.AlreadyEnrolledException;
 import id.ac.ui.cs.advprog.udehnihcourse.exception.CourseNotFoundException;
 import id.ac.ui.cs.advprog.udehnihcourse.exception.EnrollmentNotFoundException;
 import id.ac.ui.cs.advprog.udehnihcourse.exception.PaymentInitiationFailedException;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import java.math.BigDecimal;
-import java.util.Map;
 import id.ac.ui.cs.advprog.udehnihcourse.dto.coursebrowsing.*;
 import id.ac.ui.cs.advprog.udehnihcourse.model.*;
 import id.ac.ui.cs.advprog.udehnihcourse.repository.*;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import jakarta.transaction.Transactional;
 
@@ -25,18 +24,10 @@ import static java.lang.System.out;
 @RequiredArgsConstructor
 @Transactional
 public class CourseEnrollmentService {
-
-    @Autowired
     private final CourseRepository courseRepository;
-
-    @Autowired
     private final EnrollmentRepository enrollmentRepository;
-
-    @Autowired
-    private RestTemplate restTemplate;
-
-    @Value("${payment.service.url:http://localhost:8080}")
-    private String paymentServiceUrl;
+    private final PaymentServiceClient paymentServiceClient;
+    private final AuthServiceClient authServiceClient;
 
     public EnrollmentDTO enrollStudentInCourse(Long studentId, Long courseId, String paymentMethod ) {
         Course course = courseRepository.findById(courseId)
@@ -52,7 +43,8 @@ public class CourseEnrollmentService {
                 .status(EnrollmentStatus.PENDING)
                 .build();
 
-        boolean paymentInitiated = processPayment(studentId, courseId, course.getPrice(), paymentMethod, enrollment.getId());
+        String tutorName = authServiceClient.getUserInfoById(course.getTutorId()).getName();
+        boolean paymentInitiated = processPayment(studentId, courseId, course.getPrice(), paymentMethod, enrollment.getId(), course.getTitle(), tutorName);
         if (!paymentInitiated) {
             enrollment.setStatus(EnrollmentStatus.PAYMENT_FAILED);
             throw new PaymentInitiationFailedException("Gagal menginisiasi pembayaran");
@@ -77,7 +69,7 @@ public class CourseEnrollmentService {
                 .map(enrollment -> EnrolledCourseDTO.builder()
                         .id(enrollment.getCourse().getId())
                         .title(enrollment.getCourse().getTitle())
-                        .instructor(getTutorName(enrollment.getCourse().getTutorId()))
+                        .instructor(authServiceClient.getUserInfoById(enrollment.getCourse().getTutorId()).getName())
                         .build())
                 .collect(Collectors.toList());
 
@@ -95,33 +87,24 @@ public class CourseEnrollmentService {
         }
     }
 
-    private boolean processPayment(Long studentId, Long courseId, BigDecimal price, String paymentMethod, Long enrollmentId) {
+    private boolean processPayment(Long studentId, Long courseId, BigDecimal price, String paymentMethod, Long enrollmentId, String courseTitle, String tutorName) {
         try {
             PaymentRequestDTO paymentRequest = PaymentRequestDTO.builder()
                     .enrollmentId(enrollmentId)
                     .studentId(studentId)
                     .courseId(courseId)
+                    .courseTitle(courseTitle)
+                    .tutorName(tutorName)
                     .amount(price)
                     .paymentMethod(paymentMethod)
                     .timestamp(System.currentTimeMillis())
                     .build();
 
-            PaymentResponseDTO response = restTemplate.postForObject(
-                    paymentServiceUrl + "/api/payments/process",
-                    paymentRequest,
-                    PaymentResponseDTO.class
-            );
+            PaymentResponseDTO response = paymentServiceClient.createPaymentRequest(paymentRequest);
 
             return response != null && response.isSuccess();
         } catch (Exception e) {
-            out.println(e);
             return false;
         }
-    }
-
-    // TODO : Implement this method to fetch the tutor name based on the tutorId
-    private String getTutorName(String tutorId) {
-        // Place Holder for actual implementation
-        return "Tutor Name";
     }
 }
