@@ -35,12 +35,38 @@ jobs:
         run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}:latest
 
   deploy:
-    needs:  build
+    needs: build
     runs-on: [udehnih-course-aws-ec2]
     steps:
       - name: Pull image from Dockerhub
-        run:  sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}:latest
+        run: sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}:latest
       - name: Delete old container
-        run:  docker rm -f ${{ secrets.DOCKER_CONTAINER_NAME }}
+        run: docker rm -f ${{ secrets.DOCKER_CONTAINER_NAME }} || true
       - name: Run docker container
-        run: docker run -d -p 80:8080 --name ${{ secrets.DOCKER_CONTAINER_NAME }} --restart unless-stopped ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}:latest
+        run: |
+          docker run -d -p 80:8081 \
+            --name ${{ secrets.DOCKER_CONTAINER_NAME }} \
+            --restart unless-stopped \
+            -e DB_HOST=${{ secrets.DB_HOST }} \
+            -e DB_PORT=${{ secrets.DB_PORT }} \
+            -e DB_NAME=${{ secrets.DB_NAME }} \
+            -e DB_USERNAME=${{ secrets.DB_USERNAME }} \
+            -e DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
+            -e JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }} \
+            -e JWT_EXPIRATION=${{ secrets.JWT_EXPIRATION }} \
+            -e JWT_REFRESH_EXPIRATION=${{ secrets.JWT_REFRESH_EXPIRATION }} \
+            -e SERVER_PORT=8081 \
+            -e LOG_SECURITY_LEVEL=${{ secrets.LOG_SECURITY_LEVEL }} \
+            -e LOG_SQL_LEVEL=${{ secrets.LOG_SQL_LEVEL }} \
+            -e LOG_SQL_PARAMS_LEVEL=${{ secrets.LOG_SQL_PARAMS_LEVEL }} \
+            -e SHOW_SQL=${{ secrets.SHOW_SQL }} \
+            -e SONAR_PROJECT_KEY=${{ secrets.SONAR_PROJECT_KEY }} \
+            -e SONAR_ORGANIZATION=${{ secrets.SONAR_ORGANIZATION }} \
+            -e AUTH_SERVICE_URL=${{ secrets.AUTH_SERVICE_URL }} \
+            -e ALLOWED_ORIGINS='*' \
+            -e ALLOWED_METHODS='GET,POST,PUT,DELETE,OPTIONS' \
+            -e ALLOWED_HEADERS='*' \
+            -e ALLOWED_CREDENTIALS=true \
+            -e PAYMENT_SERVICE_URL=${{ secrets.PAYMENT_SERVICE_URL }} \
+            -e PAYMENT_SERVICE_API_KEY=${{ secrets.PAYMENT_SERVICE_API_KEY }} \
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}:latest
