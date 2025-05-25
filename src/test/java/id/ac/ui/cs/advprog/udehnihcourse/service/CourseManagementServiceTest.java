@@ -487,50 +487,6 @@ public class CourseManagementServiceTest {
         });
 
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
-        assertTrue(exception.getReason().contains("Only courses in DRAFT or REJECTED status"));
-        verify(courseRepository, never()).save(any(Course.class));
-    }
-
-    @Test
-    void submitCourseForReview_whenCourseHasNoSections_shouldThrowBadRequest() {
-        Course emptyCourse = Course.builder()
-                .id(courseId)
-                .tutorId(tutorId)
-                .status(CourseStatus.DRAFT)
-                .sections(Collections.emptyList())
-                .build();
-
-        when(courseRepository.findById(courseId)).thenReturn(Optional.of(emptyCourse));
-
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> {
-            courseManagementService.submitCourseForReview(courseId, tutorId);
-        });
-
-        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
-        assertTrue(exception.getReason().contains("Course must have at least one section"));
-        verify(courseRepository, never()).save(any(Course.class));
-    }
-
-    @Test
-    void submitCourseForReview_whenSectionHasNoArticles_shouldThrowBadRequest() {
-        Section emptySection = new Section();
-        emptySection.setTitle("Empty Section");
-        emptySection.setArticles(Collections.emptyList());
-
-        Course courseWithEmptySection = Course.builder()
-                .id(courseId)
-                .tutorId(tutorId)
-                .status(CourseStatus.DRAFT)
-                .sections(Arrays.asList(emptySection))
-                .build();
-
-        when(courseRepository.findById(courseId)).thenReturn(Optional.of(courseWithEmptySection));
-
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> {
-            courseManagementService.submitCourseForReview(courseId, tutorId);
-        });
-
-        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
         assertTrue(exception.getReason().contains("must have at least one article"));
         verify(courseRepository, never()).save(any(Course.class));
     }
@@ -683,4 +639,52 @@ public class CourseManagementServiceTest {
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, exception.getStatusCode());
         assertTrue(exception.getReason().contains("Course object is null"));
     }
+
+    @Test
+    void submitCourseForReview_whenCourseHasNoSections_shouldThrowBadRequest() {
+        Course emptyCourse = Course.builder()
+                .id(courseId)
+                .tutorId(tutorId)
+                .status(CourseStatus.DRAFT)
+                .sections(Collections.emptyList())
+                .build();
+
+        when(courseRepository.findById(courseId)).thenReturn(Optional.of(emptyCourse));
+
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> {
+            courseManagementService.submitCourseForReview(courseId, tutorId);
+        });
+
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
+        assertTrue(exception.getReason().contains("Course must have at least one section"));
+        verify(courseRepository, never()).save(any(Course.class));
+    }
+
+    @Test
+    void submitCourseForReview_whenSectionHasNoArticles_shouldThrowBadRequest() {
+        Section emptySection = new Section();
+        emptySection.setTitle("Empty Section");
+        emptySection.setArticles(Collections.emptyList());
+
+        Course courseWithEmptySection = Course.builder()
+                .id(courseId)
+                .tutorId(tutorId)
+                .status(CourseStatus.DRAFT)
+                .sections(Arrays.asList(emptySection))
+                .build();
+
+        when(courseRepository.findById(courseId)).thenReturn(Optional.of(courseWithEmptySection));
+
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> {
+            courseManagementService.submitCourseForReview(courseId, tutorId);
+        });
+
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
+
+        assertTrue(exception.getReason().contains("Only courses in DRAFT or REJECTED status"));
+        verify(courseRepository, never()).save(any(Course.class));
+    }
 }
+
+
+
