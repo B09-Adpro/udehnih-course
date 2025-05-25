@@ -12,18 +12,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
-import jakarta.persistence.EntityNotFoundException;
-import org.springframework.security.access.AccessDeniedException;
 import jakarta.validation.Valid;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-import id.ac.ui.cs.advprog.udehnihcourse.security.AppUserDetails;
-import id.ac.ui.cs.advprog.udehnihcourse.dto.GenericResponse;
 import id.ac.ui.cs.advprog.udehnihcourse.dto.course.CourseDetailResponse;
 
 import id.ac.ui.cs.advprog.udehnihcourse.dto.coursebrowsing.CourseListDTO;
 import id.ac.ui.cs.advprog.udehnihcourse.dto.coursebrowsing.CourseDetailDTO;
 import id.ac.ui.cs.advprog.udehnihcourse.service.CourseBrowsingService;
-import lombok.RequiredArgsConstructor;
 
 
 import java.util.HashMap;
@@ -137,8 +132,8 @@ public class CourseManagementController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("{courseId}")
-    public ResponseEntity<CourseDetailDTO> getCourseById(@PathVariable Long courseId) {
+    @GetMapping("public/{courseId}")
+    public ResponseEntity<CourseDetailDTO> getCourseByIdPublic(@PathVariable Long courseId) {
         CourseDetailDTO course = courseBrowsingService.getCourseById(courseId, null);
         return ResponseEntity.ok(course);
     }
