@@ -33,7 +33,7 @@ public class CourseEnrollmentService {
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new CourseNotFoundException("Course not found"));
 
-        if (enrollmentRepository.existsByStudentIdAndCourseIdAndStatusEquals(studentId, courseId, EnrollmentStatus.ENROLLED.name())) {
+        if (enrollmentRepository.existsByStudentIdAndCourseIdAndStatusEquals(studentId, courseId, EnrollmentStatus.ENROLLED)) {
             throw new AlreadyEnrolledException("Student is already enrolled in this course");
         }
 

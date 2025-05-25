@@ -174,6 +174,6 @@ public class CourseBrowsingService {
 
     private boolean isEnrolled(Long studentId, Long courseId) {
         
-        return enrollmentRepository.existsByStudentIdAndCourseIdAndStatusEquals(studentId, courseId, EnrollmentStatus.ENROLLED.name());
+        return enrollmentRepository.existsByStudentIdAndCourseIdAndStatusEquals(studentId, courseId, EnrollmentStatus.ENROLLED);
     }
 }
