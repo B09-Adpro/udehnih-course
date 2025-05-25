@@ -30,3 +30,9 @@ services:
   payment:
     baseurl: ${PAYMENT_SERVICE_URL_LOCAL}
     api-key: ${PAYMENT_SERVICE_API_KEY}
+
+cors:
+  allowed-origins: ${ALLOWED_ORIGINS}
+  allowed-methods: ${ALLOWED_METHODS}
+  allowed-headers: ${ALLOWED_HEADERS}
+  allow-credentials: ${ALLOWED_CREDENTIALS}
