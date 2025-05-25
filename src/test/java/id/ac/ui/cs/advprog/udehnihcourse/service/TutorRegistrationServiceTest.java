@@ -251,7 +251,12 @@ public class TutorRegistrationServiceTest {
         verify(tutorRegistrationRepository, times(1)).save(existingPendingApp);
         verify(notificationService, times(1)).sendTutorApplicationNotification(
                 eq(NotificationType.TUTOR_APPLICATION_ACCEPTED), eq(existingPendingApp), isNull());
-        verify(authServiceClient, times(1)).addRoleToUser(any(RoleRequest.class));
+
+        // Use lenient() to allow these stubbing calls for this test
+        verify(authServiceClient, times(1)).addRoleToUser(argThat(roleRequest ->
+                roleRequest.getUserId().equals(Long.parseLong(studentId)) &&
+                        roleRequest.getRoleType().equals(RoleType.TUTOR)
+        ));
     }
 
     @Test
