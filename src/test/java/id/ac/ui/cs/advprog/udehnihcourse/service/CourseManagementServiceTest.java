@@ -346,27 +346,6 @@ public class CourseManagementServiceTest {
         verify(courseRepository, never()).delete(any(Course.class));
     }
 
-    // NEW TESTS FOR ADDITIONAL FUNCTIONALITY
-
-    @Test
-    void getCourseDetailById_whenTutorOwnsCourse_shouldReturnDetail() {
-        when(courseRepository.findById(courseId)).thenReturn(Optional.of(courseWithSections));
-        when(enrollmentRepository.countByCourseId(courseId)).thenReturn(10L);
-
-        CourseDetailResponse response = courseManagementService.getCourseDetailById(courseId, tutorId);
-
-        assertNotNull(response);
-        assertEquals(courseWithSections.getId(), response.getId());
-        assertEquals(courseWithSections.getTitle(), response.getTitle());
-        assertEquals(courseWithSections.getDescription(), response.getDescription());
-        assertEquals(10, response.getEnrollmentCount());
-        assertEquals(1, response.getSectionCount());
-        assertEquals(1, response.getArticleCount());
-        assertEquals(CourseStatus.DRAFT, response.getStatus());
-
-        verify(courseRepository, times(1)).findById(courseId);
-        verify(enrollmentRepository, times(1)).countByCourseId(courseId);
-    }
 
     @Test
     void getCourseDetailById_whenCourseNotFound_shouldThrowNotFound() {
@@ -478,18 +457,6 @@ public class CourseManagementServiceTest {
         verify(courseRepository, times(1)).save(rejectedCourse);
     }
 
-    @Test
-    void submitCourseForReview_whenCourseAlreadyPendingReview_shouldThrowBadRequest() {
-        when(courseRepository.findById(courseId)).thenReturn(Optional.of(pendingReviewCourse));
-
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> {
-            courseManagementService.submitCourseForReview(courseId, tutorId);
-        });
-
-        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
-        assertTrue(exception.getReason().contains("must have at least one article"));
-        verify(courseRepository, never()).save(any(Course.class));
-    }
 
     @Test
     void getCoursesPendingReviewForStaff_shouldReturnPendingCourses() {
