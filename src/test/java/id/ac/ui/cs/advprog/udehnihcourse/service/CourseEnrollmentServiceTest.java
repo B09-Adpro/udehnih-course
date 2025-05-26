@@ -95,10 +95,11 @@ class CourseEnrollmentServiceTest {
     void whenPaymentFails_thenThrowException() {
         when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
         when(enrollmentRepository.existsByStudentIdAndCourseIdAndStatusEquals(101L, 1L, EnrollmentStatus.ENROLLED)).thenReturn(Boolean.FALSE);
-        when(paymentServiceClient.createPaymentRequest(any(PaymentRequestDTO.class)))
+        when(paymentServiceClient.createPaymentRequest(anyString(), any(PaymentRequestDTO.class)))
                 .thenReturn(new PaymentResponseDTO(false, "asda", "asda"));
         when(authServiceClient.getUserInfoById(course.getTutorId()))
                 .thenReturn(new UserInfoResponse("1","tutor1", "Tutor Name"));
+        when(enrollmentRepository.save(any(Enrollment.class))).thenReturn(enrollment); // enrollment sudah memiliki id=1L dari setUp()
 
         PaymentResponseDTO paymentResponse = PaymentResponseDTO.builder()
                 .success(false)
@@ -108,7 +109,7 @@ class CourseEnrollmentServiceTest {
         assertThrows(PaymentInitiationFailedException.class, () ->
                 courseEnrollmentService.enrollStudentInCourse(101L, 1L, PAYMENT_METHOD));
 
-        verify(enrollmentRepository, never()).save(any());
+        verify(enrollmentRepository, times(1)).save(any());
     }
 
     @Test

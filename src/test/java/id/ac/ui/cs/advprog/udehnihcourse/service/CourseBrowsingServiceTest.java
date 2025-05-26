@@ -72,7 +72,7 @@ public class CourseBrowsingServiceTest {
 
     @Test
     void testGetAllCourses() {
-        when(courseRepository.findAll()).thenReturn(List.of(course));
+        when(courseRepository.findByStatusEquals(CourseStatus.PUBLISHED)).thenReturn(List.of(course));
         when(authServiceClient.getUserInfoById("tutor-1")).thenReturn(new UserInfoResponse("1","tutor-1", "Tutor Name"));
 
         List<CourseListDTO> courses = courseBrowsingService.getAllCourses();
@@ -84,7 +84,7 @@ public class CourseBrowsingServiceTest {
 
     @Test
     void testSearchCourses() {
-        when(courseRepository.findByTitleContainingIgnoreCase("java")).thenReturn(List.of(course));
+        when(courseRepository.findByTitleContainingIgnoreCaseAndStatusEquals("java", CourseStatus.PUBLISHED)).thenReturn(List.of(course));
         when(authServiceClient.getUserInfoById("tutor-1")).thenReturn(new UserInfoResponse("1", "tutor-1", "Tutor Name"));
 
         List<CourseListDTO> courses = courseBrowsingService.searchCourses("java");

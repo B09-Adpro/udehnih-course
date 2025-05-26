@@ -15,6 +15,7 @@ import org.springframework.test.context.TestPropertySource;
         "services.auth.baseurl=http://localhost:8080",
         "services.payment.baseurl=http://localhost:8081",
         "services.payment.api-key=test-api-key",
+        "payment.service.api.key=test-api-key-for-testing",
         "jwt.secret-key=test-secret-key-for-testing-only-minimum-256-bits-long-for-hs512-algorithm",
         "jwt.expiration=3600000",
         "jwt.refresh-expiration=86400000",
