@@ -6,6 +6,7 @@ import id.ac.ui.cs.advprog.udehnihcourse.dto.coursebrowsing.PaymentResponseDTO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 
 @FeignClient(
         name = "payment-service",
@@ -15,5 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 public interface PaymentServiceClient {
     @PostMapping("/api/payments")
-    PaymentResponseDTO createPaymentRequest(@RequestBody PaymentRequestDTO paymentRequest);
+    PaymentResponseDTO createPaymentRequest(
+            @RequestHeader("X-API-Key") String apiKey,
+            @RequestBody PaymentRequestDTO paymentRequest);
 }
