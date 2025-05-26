@@ -16,6 +16,8 @@ public interface CourseRepository extends JpaRepository<Course, Long>{
     List<Course> findByStatus(CourseStatus status);
 
     List<Course> findByTitleContainingIgnoreCase(String keyword);
+    List<Course> findByStatusEquals(CourseStatus status);
+    List<Course> findByTitleContainingIgnoreCaseAndStatusEquals(String keyword, CourseStatus status);
 
     @EntityGraph(attributePaths = {"sections", "sections.articles"})
     Optional<Course> findById(Long id);
