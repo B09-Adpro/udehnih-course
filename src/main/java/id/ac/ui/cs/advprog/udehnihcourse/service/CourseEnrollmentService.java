@@ -45,7 +45,6 @@ public class CourseEnrollmentService {
                 .status(EnrollmentStatus.PENDING)
                 .build();
 
-                
         enrollment = enrollmentRepository.save(enrollment);
 
         String tutorName = authServiceClient.getUserInfoById(course.getTutorId()).getName();
@@ -66,7 +65,7 @@ public class CourseEnrollmentService {
     }
 
     public  List<EnrolledCourseDTO> getStudentEnrollments(Long studentId) {
-        List<EnrolledCourseDTO> enrolledCourses = enrollmentRepository.findByStudentId(studentId)
+        List<EnrolledCourseDTO> enrolledCourses = enrollmentRepository.findByStudentIdAndStatus(studentId, EnrollmentStatus.ENROLLED)
                 .stream()
                 .map(enrollment -> EnrolledCourseDTO.builder()
                         .id(enrollment.getCourse().getId())
