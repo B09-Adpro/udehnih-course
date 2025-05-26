@@ -115,7 +115,7 @@ class CourseEnrollmentServiceTest {
     @Test
     void whenGetStudentEnrollments_thenReturnList() {
         List<Enrollment> enrollments = Arrays.asList(enrollment);
-        when(enrollmentRepository.findByStudentId(101L)).thenReturn(enrollments);
+        when(enrollmentRepository.findByStudentIdAndStatus(101L, EnrollmentStatus.ENROLLED)).thenReturn(enrollments);
         when(authServiceClient.getUserInfoById(course.getTutorId()))
                 .thenReturn(new UserInfoResponse("1","tutor1", "Tutor Name"));
 
@@ -125,7 +125,7 @@ class CourseEnrollmentServiceTest {
         assertNotNull(results);
         assertEquals(1, results.size());
         assertEquals("Java Programming", results.get(0).getTitle());
-        verify(enrollmentRepository).findByStudentId(101L);
+        verify(enrollmentRepository).findByStudentIdAndStatus(101L, EnrollmentStatus.ENROLLED);
     }
 
     @Test
