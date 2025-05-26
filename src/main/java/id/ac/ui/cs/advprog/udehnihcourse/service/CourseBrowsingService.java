@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import id.ac.ui.cs.advprog.udehnihcourse.model.Article;
 import id.ac.ui.cs.advprog.udehnihcourse.model.Course;
+import id.ac.ui.cs.advprog.udehnihcourse.model.CourseStatus;
 import id.ac.ui.cs.advprog.udehnihcourse.model.Section;
 import id.ac.ui.cs.advprog.udehnihcourse.repository.CourseRepository;
 import jakarta.transaction.Transactional;
@@ -35,14 +36,14 @@ public class CourseBrowsingService {
     private final AuthServiceClient authServiceClient;
     
     public List<CourseListDTO> getAllCourses() {
-        List<Course> courses = courseRepository.findAll();
+        List<Course> courses = courseRepository.findByStatusEquals(CourseStatus.PUBLISHED);;
         return courses.stream()
             .map(this::convertToDto)
             .toList();
     }
 
     public List<CourseListDTO> searchCourses(String keyword) {
-        List<Course> courses = courseRepository.findByTitleContainingIgnoreCase(keyword);
+        List<Course> courses = courseRepository.findByTitleContainingIgnoreCaseAndStatusEquals(keyword, CourseStatus.PUBLISHED);
 
         return courses.stream()
             .map(this::convertToDto)
