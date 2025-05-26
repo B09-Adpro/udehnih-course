@@ -18,7 +18,6 @@ import jakarta.transaction.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static java.lang.System.out;
 
 @Service
 @RequiredArgsConstructor
@@ -28,6 +27,9 @@ public class CourseEnrollmentService {
     private final EnrollmentRepository enrollmentRepository;
     private final PaymentServiceClient paymentServiceClient;
     private final AuthServiceClient authServiceClient;
+
+    @Value("${payment.service.api.key}")
+    private String paymentServiceApiKey;
 
     public EnrollmentDTO enrollStudentInCourse(Long studentId, Long courseId, String paymentMethod ) {
         Course course = courseRepository.findById(courseId)
@@ -43,15 +45,15 @@ public class CourseEnrollmentService {
                 .status(EnrollmentStatus.PENDING)
                 .build();
 
+                
+        enrollment = enrollmentRepository.save(enrollment);
+
         String tutorName = authServiceClient.getUserInfoById(course.getTutorId()).getName();
         boolean paymentInitiated = processPayment(studentId, courseId, course.getPrice(), paymentMethod, enrollment.getId(), course.getTitle(), tutorName);
         if (!paymentInitiated) {
             enrollment.setStatus(EnrollmentStatus.PAYMENT_FAILED);
             throw new PaymentInitiationFailedException("Gagal menginisiasi pembayaran");
         }
-
-
-        enrollment = enrollmentRepository.save(enrollment);
 
         return EnrollmentDTO.builder()
                 .enrollmentId(enrollment.getId())
@@ -100,7 +102,7 @@ public class CourseEnrollmentService {
                     .timestamp(System.currentTimeMillis())
                     .build();
 
-            PaymentResponseDTO response = paymentServiceClient.createPaymentRequest(paymentRequest);
+            PaymentResponseDTO response = paymentServiceClient.createPaymentRequest(paymentServiceApiKey, paymentRequest);
 
             return response != null && response.isSuccess();
         } catch (Exception e) {
