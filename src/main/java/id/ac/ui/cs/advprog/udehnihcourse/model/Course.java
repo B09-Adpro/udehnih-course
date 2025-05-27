@@ -51,8 +51,6 @@ public class Course {
     @Default
     private CourseStatus status = CourseStatus.DRAFT;
 
-
-
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
@@ -78,6 +76,4 @@ public class Course {
         sections.remove(section);
         section.setCourse(null);
     }
-
-
 }

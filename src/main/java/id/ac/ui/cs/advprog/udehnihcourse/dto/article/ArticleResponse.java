@@ -6,10 +6,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * DTO for Article response.
- * Design Pattern: DTO, Static Factory Method
- */
 @Data
 @Builder
 @NoArgsConstructor

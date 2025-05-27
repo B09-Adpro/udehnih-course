@@ -4,10 +4,6 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
-/**
- * DTO for creating or updating an Article.
- * Design Pattern: DTO
- */
 @Data
 public class ArticleRequest {
     @NotBlank(message = "Article title is mandatory")

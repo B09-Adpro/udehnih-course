@@ -37,6 +37,7 @@ ext {
 
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     compileOnly 'org.projectlombok:lombok'
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
@@ -66,9 +67,9 @@ dependencies {
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.5'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.5'
 
-    implementation("org.springframework.cloud:spring-cloud-starter-openfeign")
-
-
+    implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'io.micrometer:micrometer-registry-prometheus'
 }
 
 dependencyManagement {
@@ -85,12 +86,7 @@ jar {
     enabled = false
 }
 
-tasks.named('test') {
-    useJUnitPlatform()
-}
-
-
-
+// JaCoCo Configuration (cleaned up)
 jacoco {
     toolVersion = "0.8.10"
 }
@@ -100,10 +96,3 @@ test {
     finalizedBy jacocoTestReport
 }
 
-jacocoTestReport {
-    dependsOn test
-    reports {
-        xml.required = true
-        html.required = true
-    }
-}

@@ -39,3 +39,7 @@ out/
 .env*
 !.env.project
 !.env.vault
+
+kubectl
+minikube
+ngrok-v3-stable-linux-amd64.tgz

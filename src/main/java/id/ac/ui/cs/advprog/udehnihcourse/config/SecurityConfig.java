@@ -40,6 +40,9 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorizeRequests ->
                         authorizeRequests
+                                .requestMatchers("/actuator/**")
+                                .permitAll()
+
                                 .requestMatchers(HttpMethod.PUT,
                                         "/api/internal/**")
                                 .hasRole("STAFF")
